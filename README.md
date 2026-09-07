@@ -2,86 +2,35 @@
 
 **AI Architecture & Islamic Design**
 
-Nexvary Andalus Studio is an Arabic-first design platform for Andalusian and Islamic architecture,
-parametric ornament, floor planning, 3D visualization, and AI-assisted redesign.
+Arabic-first platform for Andalusian and Islamic architecture, parametric ornament, floor planning, 3D visualization and AI-assisted redesign.
 
-Current integrated checkpoint: **Stage 425 / v0.4.25**
+Current integrated checkpoint: **Stage 625 / v0.6.25 — Project Intelligence**
 
-## What works in the Stage-425 core
+## Stage-625 capabilities
 
-- deterministic Islamic geometry: stars, rosettes, zellij grids, borders
-- SVG export for patterns
-- deterministic 2D floor-plan geometry
-- room area/perimeter, wall length, opening validation, plan bounds
-- SVG floor-plan preview
-- parametric horseshoe arch and courtyard validation
-- bilingual Andalusian/Islamic style catalog
-- Architectural Lock design constraints
-- FastAPI endpoints for styles, patterns, architectural elements, prompt planning and floor-plan analysis
-- responsive RTL/LTR Three.js Web Studio foundation
-- Android Jetpack Compose foundation with RTL, safe insets and Back behavior
-- SceneView/ARSceneView dependencies reserved for native 3D/AR
-- cross-client JSON project schema
-- automated Python tests and multi-platform CI definitions
+- Stage-425 geometry core: Islamic patterns, 2D plans, horseshoe arches and courtyards
+- immutable project snapshots and SHA-256 revision fingerprints
+- Arabic/English Andalusian material catalog
+- surface takeoff, coverage and waste calculations
+- BOM aggregation with costs only from user-supplied prices
+- deterministic DXF R12 wall export and UTF-8 BOM CSV
+- fingerprinted export manifests
+- AI generation-plan compiler driven by source type and Architectural Locks
+- post-generation candidate validator that rejects changes to locked geometry
+- provider/model/license/source provenance structure
+- FastAPI routes for materials, quantities, BOM, exports, fingerprints and AI planning
+- Web Stage-625 client wired to the API for material quantity, AI planning and DXF download
+- Android Stage-625 shared models for locks/takeoff/revisions
+- project schema v0.6.25 for provenance, revisions, materials, pricing, AI and exports
 
-## Repository
+## Engineering rule
 
-- `packages/andalus-pattern-engine/`
-- `packages/floorplan-engine/`
-- `packages/andalus-architecture-engine/`
-- `packages/design-schema/`
-- `services/ai-api/`
-- `apps/web-3d/`
-- `apps/android/`
-- `docs/`
+Generative output remains a concept layer. Geometry, quantities and contractor-oriented exports must originate from the deterministic project model. A visually successful AI result is rejected if it violates an Architectural Lock.
 
-## Run the API
+## Verification
 
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -e "packages/andalus-pattern-engine[dev]"
-pip install -e "packages/floorplan-engine[dev]"
-pip install -e "packages/andalus-architecture-engine[dev]"
-pip install -e "services/ai-api[dev]"
-uvicorn nexvary_andalus_api:app --reload
-```
+New Stage-625 deterministic tests: **29 passed locally**.
+Stage-425 deterministic baseline: **33 passed**.
+The CI workflow is configured to run the combined suite plus Web and Android builds when GitHub allocates a runner.
 
-Windows PowerShell activation:
-
-```powershell
-.venv\Scripts\Activate.ps1
-```
-
-## Run tests
-
-```bash
-pytest -q packages/andalus-pattern-engine/tests packages/floorplan-engine/tests packages/andalus-architecture-engine/tests services/ai-api/tests
-```
-
-Stage-425 local deterministic result: **33 tests passed**.
-
-## Web 3D
-
-```bash
-cd apps/web-3d
-npm install
-npm run dev
-```
-
-## Android
-
-Open `apps/android` in Android Studio. The project is configured for AGP 9.4 / Gradle 9.6,
-Compose, and Android 15 compatibility.
-
-## Important product rule
-
-Generative output is a concept layer. Construction dimensions and quantities must come from the
-deterministic geometry/project model. `Architectural Lock` constraints are mandatory invariants for
-all future image-generation and redesign pipelines.
-
-See:
-- `docs/ARCHITECTURE.md`
-- `docs/STAGE_LEDGER_002_425.md`
-- `docs/QA_STAGE_425.md`
-- `docs/THIRD_PARTY_LICENSES.md`
+See `docs/STAGE_LEDGER_426_625.md`, `docs/QA_STAGE_625.md`, `docs/AI_ORCHESTRATION.md`, and `docs/EXPORT_POLICY.md`.

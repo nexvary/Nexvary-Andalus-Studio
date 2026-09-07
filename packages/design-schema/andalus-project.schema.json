@@ -3,123 +3,26 @@
   "$id": "https://nexvary.com/schemas/andalus-project.schema.json",
   "title": "Nexvary Andalus Studio Project",
   "type": "object",
-  "required": [
-    "projectId",
-    "name",
-    "styleSchool",
-    "locks",
-    "units",
-    "version"
-  ],
+  "required": ["projectId", "name", "styleSchool", "locks", "units", "version"],
   "properties": {
-    "version": {
-      "type": "string",
-      "const": "0.4.25"
-    },
-    "projectId": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 120
-    },
-    "name": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 200
-    },
-    "locale": {
-      "type": "string",
-      "enum": ["ar", "en", "tr"],
-      "default": "ar"
-    },
-    "units": {
-      "type": "string",
-      "enum": ["metric", "imperial"],
-      "default": "metric"
-    },
-    "styleSchool": {
-      "type": "string",
-      "enum": [
-        "nasrid-granada",
-        "cordoban",
-        "moroccan-andalusian",
-        "mamluk",
-        "ottoman",
-        "damascene",
-        "contemporary-andalusian"
-      ]
-    },
-    "ornamentIntensity": {
-      "type": "string",
-      "enum": ["calm", "balanced", "luxury", "royal", "historic"],
-      "default": "balanced"
-    },
-    "locks": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "massing",
-        "floorCount",
-        "openings",
-        "entrance",
-        "roofline",
-        "roomBoundaries"
-      ],
-      "properties": {
-        "massing": {"type": "boolean", "default": true},
-        "floorCount": {"type": "boolean", "default": true},
-        "openings": {"type": "boolean", "default": true},
-        "entrance": {"type": "boolean", "default": false},
-        "roofline": {"type": "boolean", "default": true},
-        "roomBoundaries": {"type": "boolean", "default": true}
-      }
-    },
-    "source": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "kind": {"type": "string", "enum": ["photo", "floorplan", "scan", "blank"]},
-        "provenance": {"type": "string", "maxLength": 1000},
-        "widthPx": {"type": "integer", "minimum": 1},
-        "heightPx": {"type": "integer", "minimum": 1}
-      }
-    },
-    "floorPlan": {
-      "type": "object",
-      "properties": {
-        "walls": {"type": "array", "maxItems": 2000},
-        "openings": {"type": "array", "maxItems": 2000},
-        "rooms": {"type": "array", "maxItems": 1000}
-      },
-      "additionalProperties": true
-    },
-    "patternPresets": {
-      "type": "array",
-      "maxItems": 500,
-      "items": {
-        "type": "object",
-        "required": ["type", "parameters"],
-        "properties": {
-          "type": {"type": "string", "enum": ["star", "rosette", "zellij-grid", "border"]},
-          "parameters": {"type": "object"}
-        }
-      }
-    },
-    "rendering": {
-      "type": "object",
-      "properties": {
-        "quality": {"type": "string", "enum": ["draft", "preview", "high", "ultra"], "default": "preview"},
-        "environment": {"type": "string", "default": "courtyard-day"},
-        "realWorldScale": {"type": "boolean", "default": true}
-      }
-    },
-    "audit": {
-      "type": "object",
-      "properties": {
-        "createdAt": {"type": "string", "format": "date-time"},
-        "updatedAt": {"type": "string", "format": "date-time"},
-        "generatorVersion": {"type": "string"}
-      }
-    }
+    "version": {"type": "string", "const": "0.6.25"},
+    "projectId": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,119}$"},
+    "name": {"type": "string", "minLength": 1, "maxLength": 200},
+    "locale": {"type": "string", "enum": ["ar", "en", "tr"], "default": "ar"},
+    "units": {"type": "string", "enum": ["metric", "imperial"], "default": "metric"},
+    "styleSchool": {"type": "string", "enum": ["nasrid-granada", "cordoban", "moroccan-andalusian", "mamluk", "ottoman", "damascene", "contemporary-andalusian"]},
+    "ornamentIntensity": {"type": "string", "enum": ["calm", "balanced", "luxury", "royal", "historic"], "default": "balanced"},
+    "locks": {"type": "object", "additionalProperties": false, "required": ["massing", "floorCount", "openings", "entrance", "roofline", "roomBoundaries"], "properties": {"massing": {"type": "boolean", "default": true}, "floorCount": {"type": "boolean", "default": true}, "openings": {"type": "boolean", "default": true}, "entrance": {"type": "boolean", "default": false}, "roofline": {"type": "boolean", "default": true}, "roomBoundaries": {"type": "boolean", "default": true}}},
+    "source": {"type": "object", "additionalProperties": false, "properties": {"kind": {"type": "string", "enum": ["photo", "floorplan", "scan", "blank"]}, "provenance": {"type": "string", "maxLength": 1000}, "sourceDigest": {"type": "string", "pattern": "^[0-9a-f]{64}$"}, "widthPx": {"type": "integer", "minimum": 1}, "heightPx": {"type": "integer", "minimum": 1}}},
+    "floorPlan": {"type": "object", "properties": {"walls": {"type": "array", "maxItems": 5000}, "openings": {"type": "array", "maxItems": 5000}, "rooms": {"type": "array", "maxItems": 2000}}, "additionalProperties": true},
+    "patternPresets": {"type": "array", "maxItems": 500, "items": {"type": "object", "required": ["type", "parameters"], "properties": {"type": {"type": "string", "enum": ["star", "rosette", "zellij-grid", "border"]}, "parameters": {"type": "object"}}}},
+    "materialAssignments": {"type": "array", "maxItems": 5000, "items": {"type": "object", "required": ["surfaceId", "materialId", "areaM2"], "properties": {"surfaceId": {"type": "string", "maxLength": 120}, "materialId": {"type": "string", "maxLength": 120}, "areaM2": {"type": "number", "minimum": 0}, "wasteOverride": {"type": ["number", "null"], "minimum": 0, "maximum": 0.5}}, "additionalProperties": false}},
+    "pricing": {"type": "object", "description": "Optional user-supplied prices only; the application does not invent live market prices.", "properties": {"currency": {"type": "string", "maxLength": 8}, "unitPrices": {"type": "object", "additionalProperties": {"type": "number", "minimum": 0}}}, "additionalProperties": false},
+    "ai": {"type": "object", "properties": {"conceptOnly": {"type": "boolean", "const": true}, "lastPlanDigest": {"type": "string", "pattern": "^[0-9a-f]{64}$"}, "provider": {"type": "string", "maxLength": 120}, "modelId": {"type": "string", "maxLength": 200}, "modelLicense": {"type": "string", "maxLength": 500}}, "additionalProperties": false},
+    "revisions": {"type": "object", "properties": {"revision": {"type": "integer", "minimum": 1}, "parentFingerprint": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"}, "fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}, "additionalProperties": false},
+    "exports": {"type": "object", "properties": {"formats": {"type": "array", "items": {"type": "string", "enum": ["svg", "dxf", "csv", "json"]}}, "lastManifestFingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}, "additionalProperties": false},
+    "rendering": {"type": "object", "properties": {"quality": {"type": "string", "enum": ["draft", "preview", "high", "ultra"], "default": "preview"}, "environment": {"type": "string", "default": "courtyard-day"}, "realWorldScale": {"type": "boolean", "default": true}}},
+    "audit": {"type": "object", "properties": {"createdAt": {"type": "string", "format": "date-time"}, "updatedAt": {"type": "string", "format": "date-time"}, "generatorVersion": {"type": "string"}}}
   },
   "additionalProperties": false
 }
