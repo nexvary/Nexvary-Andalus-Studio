@@ -1,5 +1,5 @@
 {
-  "version": "0.4.25",
+  "version": "0.8.25",
   "projectId": "demo-granada-courtyard",
   "name": "Granada Courtyard Demo",
   "locale": "ar",
@@ -32,6 +32,29 @@
       }
     }
   ],
+  "materialAssignments": [],
+  "assetReferences": [],
+  "pricing": {
+    "currency": "EGP",
+    "unitPrices": {}
+  },
+  "ai": {
+    "conceptOnly": true,
+    "provider": "dry-run",
+    "modelId": "none",
+    "modelLicense": "not-applicable"
+  },
+  "runtime": {
+    "preferredAdapter": "dry-run",
+    "externalServiceAllowed": false
+  },
+  "scene": {
+    "format": "gltf2",
+    "realWorldScale": true
+  },
+  "exports": {
+    "formats": ["svg", "dxf", "csv", "gltf"]
+  },
   "rendering": {
     "quality": "preview",
     "environment": "courtyard-day",
@@ -40,6 +63,6 @@
   "audit": {
     "createdAt": "2026-09-07T03:00:00Z",
     "updatedAt": "2026-09-07T03:00:00Z",
-    "generatorVersion": "0.4.25"
+    "generatorVersion": "0.8.25"
   }
 }

@@ -9,7 +9,7 @@ client = TestClient(app)
 def test_health():
     response = client.get("/health")
     assert response.status_code == 200
-    assert response.json()["version"] == "0.6.25"
+    assert response.json()["version"] == "0.8.25"
 
 
 def test_styles_are_bilingual():

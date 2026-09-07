@@ -1,4 +1,4 @@
-name: Stage 625 Quality Gate
+name: Stage 825 Quality Gate
 
 on:
   push:
@@ -27,7 +27,10 @@ jobs:
           pip install -e "packages/project-core[dev]"
           pip install -e "packages/materials-engine[dev]"
           pip install -e "packages/export-engine[dev]"
+          pip install -e "packages/asset-registry[dev]"
+          pip install -e "packages/scene-export[dev]"
           pip install -e "services/ai-api[dev]"
+          pip install "jsonschema>=4.23,<5"
       - name: Ruff
         run: |
           ruff check packages/andalus-pattern-engine/src packages/andalus-pattern-engine/tests
@@ -36,6 +39,8 @@ jobs:
           ruff check packages/project-core/src packages/project-core/tests
           ruff check packages/materials-engine/src packages/materials-engine/tests
           ruff check packages/export-engine/src packages/export-engine/tests
+          ruff check packages/asset-registry/src packages/asset-registry/tests
+          ruff check packages/scene-export/src packages/scene-export/tests
           ruff check services/ai-api/src services/ai-api/tests
       - name: Tests
         run: |
@@ -46,13 +51,24 @@ jobs:
             packages/project-core/tests \
             packages/materials-engine/tests \
             packages/export-engine/tests \
+            packages/asset-registry/tests \
+            packages/scene-export/tests \
             services/ai-api/tests
-      - name: Stage version smoke
+      - name: Schema and version gate
         run: |
           python - <<'PY'
+          import json
+          from pathlib import Path
+          from jsonschema import Draft202012Validator
           from nexvary_andalus_api import app
-          assert app.version == "0.6.25"
-          print("Stage 625 API gate: PASS")
+
+          schema = json.loads(Path("packages/design-schema/andalus-project.schema.json").read_text())
+          sample = json.loads(Path("packages/design-schema/sample-project.json").read_text())
+          Draft202012Validator(schema).validate(sample)
+          assert schema["properties"]["version"]["const"] == "0.8.25"
+          assert sample["version"] == "0.8.25"
+          assert app.version == "0.8.25"
+          print("Stage 825 Python/schema gate: PASS")
           PY
 
   web-studio:

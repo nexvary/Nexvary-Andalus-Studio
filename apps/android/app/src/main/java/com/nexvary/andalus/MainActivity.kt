@@ -7,7 +7,6 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -17,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -39,6 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
 private val Navy = Color(0xFF06131F)
@@ -48,16 +49,12 @@ private val Gold = Color(0xFFD6B85E)
 private val Ivory = Color(0xFFF3ECD8)
 private val Muted = Color(0xFF91AAA5)
 
-data class StudioTool(val title: String, val subtitle: String)
+data class StudioTool(val title: String, val subtitle: String, val badge: String? = null)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent {
-            AndalusTheme {
-                StudioApp()
-            }
-        }
+        setContent { AndalusTheme { StudioApp() } }
     }
 }
 
@@ -87,16 +84,9 @@ private fun StudioApp() {
         containerColor = Navy,
     ) { innerPadding ->
         if (screen == "home") {
-            Dashboard(
-                padding = innerPadding,
-                onOpen = { screen = it },
-            )
+            Dashboard(padding = innerPadding, onOpen = { screen = it })
         } else {
-            FeatureScreen(
-                key = screen,
-                padding = innerPadding,
-                onBack = { screen = "home" },
-            )
+            FeatureScreen(key = screen, padding = innerPadding, onBack = { screen = "home" })
         }
     }
 }
@@ -107,12 +97,16 @@ private fun Dashboard(
     onOpen: (String) -> Unit,
 ) {
     val tools = listOf(
-        "ai" to StudioTool("المعماري الذكي", "إعادة تصميم الواجهات والداخل مع Architectural Lock"),
+        "projects" to StudioTool("المشاريع والإصدارات", "حفظ النسخ وتتبع البصمات ومنع تعارض التعديلات", "SYNC"),
+        "ai" to StudioTool("المعماري الذكي", "خطط AI مع Architectural Lock وحالة Jobs", "LOCK"),
         "plan" to StudioTool("المخطط 2D", "الجدران والغرف والفتحات والقياسات"),
-        "3d" to StudioTool("الاستوديو 3D", "استعراض المنزل والفناء والخامات"),
+        "3d" to StudioTool("الاستوديو 3D", "مشاهد حقيقية القياس وتصدير glTF 2.0", "glTF"),
         "patterns" to StudioTool("Pattern Studio", "الزليج والنجوم والروسيات والحدود"),
-        "ar" to StudioTool("الواقع المعزز", "معاينة العناصر داخل المكان الحقيقي"),
-        "library" to StudioTool("مكتبة الأندلس", "مدارس غرناطة وقرطبة والمغرب وغيرها"),
+        "assets" to StudioTool("مكتبة الأصول", "أصول مرخصة مع المصدر والترخيص والبصمة", "LICENSE"),
+        "materials" to StudioTool("الخامات والكميات", "BOM والهالك والأسعار التي يدخلها المستخدم"),
+        "exports" to StudioTool("مركز التصدير", "SVG وDXF وCSV وglTF مع Manifest"),
+        "ar" to StudioTool("الواقع المعزز", "معاينة العناصر على الأجهزة المدعومة", "HW GATE"),
+        "library" to StudioTool("مكتبة الأندلس", "غرناطة وقرطبة والمغرب والمدارس الإسلامية"),
     )
 
     LazyColumn(
@@ -128,11 +122,17 @@ private fun Dashboard(
             Spacer(Modifier.height(12.dp))
             Text("Nexvary Andalus Studio", color = Gold, fontWeight = FontWeight.Bold)
             Text(
+                "Stage 825 • Production Runtime Foundation • v0.8.25",
+                color = Emerald,
+                style = MaterialTheme.typography.bodySmall,
+            )
+            Text(
                 "العمارة الأندلسية والتصميم الإسلامي بالذكاء الاصطناعي",
                 color = Muted,
                 style = MaterialTheme.typography.bodySmall,
+                textAlign = TextAlign.Right,
             )
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(10.dp))
         }
         items(tools) { (key, tool) ->
             Card(
@@ -143,10 +143,19 @@ private fun Dashboard(
                 colors = CardDefaults.cardColors(containerColor = Panel),
                 shape = RoundedCornerShape(18.dp),
             ) {
-                Column(Modifier.padding(18.dp)) {
-                    Text(tool.title, color = Ivory, fontWeight = FontWeight.SemiBold)
-                    Spacer(Modifier.height(5.dp))
-                    Text(tool.subtitle, color = Muted, style = MaterialTheme.typography.bodySmall)
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(18.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text(tool.title, color = Ivory, fontWeight = FontWeight.SemiBold)
+                        Spacer(Modifier.height(5.dp))
+                        Text(tool.subtitle, color = Muted, style = MaterialTheme.typography.bodySmall)
+                    }
+                    if (tool.badge != null) {
+                        Text(tool.badge, color = Gold, style = MaterialTheme.typography.labelSmall)
+                    }
                 }
             }
         }
@@ -161,10 +170,14 @@ private fun FeatureScreen(
     onBack: () -> Unit,
 ) {
     val title = when (key) {
+        "projects" -> "المشاريع والإصدارات"
         "ai" -> "المعماري الذكي"
         "plan" -> "المخطط 2D"
         "3d" -> "الاستوديو 3D"
         "patterns" -> "Pattern Studio"
+        "assets" -> "مكتبة الأصول"
+        "materials" -> "الخامات والكميات"
+        "exports" -> "مركز التصدير"
         "ar" -> "الواقع المعزز"
         else -> "مكتبة الأندلس"
     }
@@ -182,7 +195,10 @@ private fun FeatureScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            Text(title, color = Gold, fontWeight = FontWeight.Bold)
+            Column {
+                Text(title, color = Gold, fontWeight = FontWeight.Bold)
+                Text("Stage 825", color = Muted, style = MaterialTheme.typography.labelSmall)
+            }
             Button(
                 onClick = onBack,
                 colors = ButtonDefaults.buttonColors(containerColor = Panel, contentColor = Ivory),
@@ -193,18 +209,61 @@ private fun FeatureScreen(
         if (key == "ai") {
             ArchitecturalLocks()
         } else {
-            Surface(
-                modifier = Modifier.fillMaxSize(),
-                color = Panel,
-                shape = RoundedCornerShape(20.dp),
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text(
-                        "تم تجهيز نواة $title ضمن Stage 425\nوسيتم ربط المحرك المتخصص هنا.",
-                        color = Muted,
-                    )
-                }
-            }
+            CapabilityPanel(key)
+        }
+    }
+}
+
+@Composable
+private fun CapabilityPanel(key: String) {
+    val lines = when (key) {
+        "projects" -> listOf(
+            "SQLite transactional repository",
+            "Immutable revision fingerprints",
+            "Optimistic concurrency conflict protection",
+        )
+        "3d" -> listOf(
+            "Real-world wall dimensions",
+            "glTF 2.0 scene export",
+            "Scene export tied to project fingerprint",
+        )
+        "assets" -> listOf(
+            "Source URL + license + attribution",
+            "SHA-256 integrity digest",
+            "Commercial-use and review gate",
+        )
+        "materials" -> listOf(
+            "Surface takeoff and waste",
+            "BOM aggregation",
+            "Costs only from user-supplied unit prices",
+        )
+        "exports" -> listOf(
+            "SVG patterns and floor plans",
+            "DXF R12 and UTF-8 CSV",
+            "glTF 2.0 scene export",
+        )
+        "ar" -> listOf(
+            "SceneView / ARSceneView integration",
+            "Camera capability is hardware-gated",
+            "No release claim before real-device QA",
+        )
+        "plan" -> listOf("Room area/perimeter", "Wall/opening validation", "Deterministic geometry model")
+        "patterns" -> listOf("Stars", "Rosettes", "Zellij grids", "Borders")
+        else -> listOf("Nasrid Granada", "Cordoban", "Moroccan-Andalusian", "Contemporary Andalusian")
+    }
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = Panel,
+        shape = RoundedCornerShape(20.dp),
+    ) {
+        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            lines.forEach { line -> Text("• $line", color = Ivory) }
+            Text(
+                "الواجهات الثقيلة أو المعتمدة على الأجهزة لا تُعتبر Release-ready قبل اجتياز بوابة البناء والاختبار الفعلي.",
+                color = Muted,
+                style = MaterialTheme.typography.bodySmall,
+            )
         }
     }
 }
@@ -221,7 +280,7 @@ private fun ArchitecturalLocks() {
     )
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(
-            "ثبّت العناصر التي لا تسمح للذكاء الاصطناعي بتغييرها.",
+            "ثبّت العناصر التي لا تسمح للذكاء الاصطناعي بتغييرها. نتيجة AI التي تكسر قفلًا تُرفض برمجيًا.",
             color = Muted,
             style = MaterialTheme.typography.bodySmall,
         )

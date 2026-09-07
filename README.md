@@ -2,35 +2,83 @@
 
 **AI Architecture & Islamic Design**
 
-Arabic-first platform for Andalusian and Islamic architecture, parametric ornament, floor planning, 3D visualization and AI-assisted redesign.
+Arabic-first platform for Andalusian and Islamic architecture, parametric ornament, floor planning,
+3D visualization, licensed heritage assets and AI-assisted redesign.
 
-Current integrated checkpoint: **Stage 625 / v0.6.25 — Project Intelligence**
+Current integrated development checkpoint: **Stage 825 / v0.8.25 — Production Runtime Foundation**
 
-## Stage-625 capabilities
+## What Stage 825 adds
 
-- Stage-425 geometry core: Islamic patterns, 2D plans, horseshoe arches and courtyards
-- immutable project snapshots and SHA-256 revision fingerprints
-- Arabic/English Andalusian material catalog
-- surface takeoff, coverage and waste calculations
-- BOM aggregation with costs only from user-supplied prices
-- deterministic DXF R12 wall export and UTF-8 BOM CSV
-- fingerprinted export manifests
-- AI generation-plan compiler driven by source type and Architectural Locks
-- post-generation candidate validator that rejects changes to locked geometry
-- provider/model/license/source provenance structure
-- FastAPI routes for materials, quantities, BOM, exports, fingerprints and AI planning
-- Web Stage-625 client wired to the API for material quantity, AI planning and DXF download
-- Android Stage-625 shared models for locks/takeoff/revisions
-- project schema v0.6.25 for provenance, revisions, materials, pricing, AI and exports
+- SQLite transactional project repository
+- immutable project revisions and optimistic-concurrency conflict protection
+- project list/load/history API
+- asset registry with source, license, attribution, SHA-256 and review state
+- product-use gate that blocks unreviewed or non-commercial assets
+- AI adapter protocol and deterministic dry-run provider
+- optional external ComfyUI adapter boundary without bundling ComfyUI or model weights
+- AI job state machine, idempotency and terminal-state protection
+- deterministic scene manifests
+- self-contained glTF 2.0 wall-geometry export with embedded binary buffer
+- Stage-825 Web client for revisions, assets, adapters, dry-run jobs and glTF download
+- Android v0.8.25 UI/contracts aligned with projects, assets, runtime and exports
+- shared project schema v0.8.25
+- expanded multi-platform CI and release-gate documentation
 
-## Engineering rule
+## Earlier core retained
 
-Generative output remains a concept layer. Geometry, quantities and contractor-oriented exports must originate from the deterministic project model. A visually successful AI result is rejected if it violates an Architectural Lock.
+Stage 825 builds on rather than replaces the previous deterministic foundation:
 
-## Verification
+- Islamic star, rosette, zellij and border generation
+- SVG pattern export
+- 2D floor-plan geometry, room metrics and opening validation
+- horseshoe-arch and courtyard geometry
+- bilingual Andalusian style catalog
+- Architectural Lock prompt planning and post-generation validation
+- material takeoff, waste, BOM and user-supplied pricing
+- DXF R12 and UTF-8 CSV export
+- export/project fingerprints and provenance records
 
-New Stage-625 deterministic tests: **29 passed locally**.
-Stage-425 deterministic baseline: **33 passed**.
-The CI workflow is configured to run the combined suite plus Web and Android builds when GitHub allocates a runner.
+## Repository layout
 
-See `docs/STAGE_LEDGER_426_625.md`, `docs/QA_STAGE_625.md`, `docs/AI_ORCHESTRATION.md`, and `docs/EXPORT_POLICY.md`.
+- `packages/andalus-pattern-engine/`
+- `packages/floorplan-engine/`
+- `packages/andalus-architecture-engine/`
+- `packages/project-core/`
+- `packages/materials-engine/`
+- `packages/export-engine/`
+- `packages/asset-registry/`
+- `packages/scene-export/`
+- `packages/design-schema/`
+- `services/ai-api/`
+- `apps/web-3d/`
+- `apps/android/`
+- `docs/`
+
+## Engineering rules
+
+1. Generative output is a **concept layer**. Geometry and quantities come from deterministic models.
+2. A visually successful AI candidate is rejected if it violates an enabled Architectural Lock.
+3. External assets are not product-ready until provenance/license review passes.
+4. Model/checkpoint rights are reviewed independently from inference-library or adapter licenses.
+5. ComfyUI, when enabled, is an optional external service; public clients do not submit arbitrary raw workflows.
+6. Prices are supplied by the user or a separately approved data source; the core does not invent live prices.
+7. DXF/glTF exports are interchange aids and are not stamped construction documents.
+8. Arabic RTL, Android Back behavior, safe insets and real-device QA remain release requirements.
+
+## Verification status
+
+The latest Stage-825 runtime development block recorded **27 local tests passing**, plus strict
+TypeScript and standalone Kotlin source gates. The hosted workflow now covers old and new Python
+packages, schema/sample validation, Web build and Android assemble whenever GitHub allocates a runner.
+
+A workflow run with zero executed steps is not counted as a successful or failed source build.
+
+## Documentation
+
+- `docs/STAGE_LEDGER_002_425.md`
+- `docs/STAGE_LEDGER_426_625.md`
+- `docs/STAGE_LEDGER_626_825.md`
+- `docs/QA_STAGE_825.md`
+- `docs/AI_ORCHESTRATION.md`
+- `docs/EXPORT_POLICY.md`
+- `docs/THIRD_PARTY_LICENSES.md`
