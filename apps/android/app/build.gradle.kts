@@ -12,8 +12,8 @@ android {
         applicationId = "com.nexvary.andalus"
         minSdk = 26
         targetSdk = 35
-        versionCode = 425
-        versionName = "0.4.25"
+        versionCode = 825
+        versionName = "0.8.25"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
