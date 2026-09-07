@@ -1,7 +1,14 @@
-from .models import ProjectSnapshot, canonical_json, project_fingerprint
+from .models import ProjectSnapshot, canonical_json, diff_paths, project_fingerprint
 from .sqlite_repo import ProjectConflictError, ProjectHead, SQLiteProjectRepository
+from .storage import RevisionStore
 
 __all__ = [
-    "ProjectSnapshot", "canonical_json", "project_fingerprint",
-    "ProjectConflictError", "ProjectHead", "SQLiteProjectRepository",
+    "ProjectSnapshot",
+    "RevisionStore",
+    "canonical_json",
+    "diff_paths",
+    "project_fingerprint",
+    "ProjectConflictError",
+    "ProjectHead",
+    "SQLiteProjectRepository",
 ]
