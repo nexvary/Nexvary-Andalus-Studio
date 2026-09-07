@@ -1,0 +1,45 @@
+{
+  "version": "0.4.25",
+  "projectId": "demo-granada-courtyard",
+  "name": "Granada Courtyard Demo",
+  "locale": "ar",
+  "units": "metric",
+  "styleSchool": "nasrid-granada",
+  "ornamentIntensity": "luxury",
+  "locks": {
+    "massing": true,
+    "floorCount": true,
+    "openings": true,
+    "entrance": false,
+    "roofline": true,
+    "roomBoundaries": true
+  },
+  "source": {
+    "kind": "blank",
+    "provenance": "Nexvary Andalus Studio deterministic demo"
+  },
+  "floorPlan": {
+    "walls": [],
+    "openings": [],
+    "rooms": []
+  },
+  "patternPresets": [
+    {
+      "type": "zellij-grid",
+      "parameters": {
+        "cells": 4,
+        "star_points": 8
+      }
+    }
+  ],
+  "rendering": {
+    "quality": "preview",
+    "environment": "courtyard-day",
+    "realWorldScale": true
+  },
+  "audit": {
+    "createdAt": "2026-09-07T03:00:00Z",
+    "updatedAt": "2026-09-07T03:00:00Z",
+    "generatorVersion": "0.4.25"
+  }
+}

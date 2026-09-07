@@ -3,23 +3,17 @@ requires = ["setuptools>=75"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "nexvary-andalus-pattern-engine"
+name = "nexvary-andalus-architecture-engine"
 version = "0.4.25"
-description = "Deterministic Islamic geometric pattern engine for Nexvary Andalus Studio"
+description = "Parametric architectural elements for Nexvary Andalus Studio"
 requires-python = ">=3.11"
 license = {text = "Proprietary - repository owner; third-party components separately licensed"}
 
 [project.optional-dependencies]
-dev = [
-  "pytest>=8.3,<9",
-  "ruff>=0.8,<1"
-]
+dev = ["pytest>=8.3,<9", "ruff>=0.8,<1"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 100

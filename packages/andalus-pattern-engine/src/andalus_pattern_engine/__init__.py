@@ -1,3 +1,23 @@
-from .patterns import StarPattern, generate_star_svg
+from .patterns import (
+    BorderPattern,
+    RosettePattern,
+    StarPattern,
+    ZellijGrid,
+    available_patterns,
+    generate_border_svg,
+    generate_rosette_svg,
+    generate_star_svg,
+    generate_zellij_svg,
+)
 
-__all__ = ["StarPattern", "generate_star_svg"]
+__all__ = [
+    "BorderPattern",
+    "RosettePattern",
+    "StarPattern",
+    "ZellijGrid",
+    "available_patterns",
+    "generate_border_svg",
+    "generate_rosette_svg",
+    "generate_star_svg",
+    "generate_zellij_svg",
+]
