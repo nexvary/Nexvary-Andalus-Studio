@@ -9,7 +9,7 @@ client = TestClient(app)
 def test_health():
     response = client.get("/health")
     assert response.status_code == 200
-    assert response.json()["version"] == "0.4.25"
+    assert response.json()["version"] == "0.6.25"
 
 
 def test_styles_are_bilingual():
@@ -111,3 +111,42 @@ def test_courtyard_endpoint():
     )
     assert response.status_code == 200
     assert response.json()["metrics"]["totalArea"] == 120
+
+
+def test_stage625_material_takeoff_endpoint():
+    response = client.post(
+        "/v1/quantities/surface",
+        json={"material_id": "zellij-handmade", "area_m2": 10},
+    )
+    assert response.status_code == 200
+    assert response.json()["purchase_quantity"] == 11.2
+
+
+def test_stage625_ai_candidate_lock_rejection():
+    response = client.post(
+        "/v1/ai/validate-candidate",
+        json={
+            "baseline": {"geometry": {"massingDigest": "abc"}},
+            "candidate": {"geometry": {"massingDigest": "xyz"}},
+            "locks": {"massing": True},
+        },
+    )
+    assert response.status_code == 200
+    assert response.json()["accepted"] is False
+    assert "geometry.massingDigest" in response.json()["violations"]
+
+
+def test_stage625_dxf_export_endpoint():
+    response = client.post(
+        "/v1/exports/plan.dxf",
+        json={
+            "units": "metric",
+            "walls": [
+                {"x1": 0, "y1": 0, "x2": 5, "y2": 0},
+                {"x1": 5, "y1": 0, "x2": 5, "y2": 4},
+            ],
+        },
+    )
+    assert response.status_code == 200
+    assert "LINE" in response.text
+    assert response.text.endswith("EOF\n")
