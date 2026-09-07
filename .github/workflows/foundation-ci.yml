@@ -1,48 +1,88 @@
-name: Foundation CI
+name: Stage 425 Quality Gate
 
 on:
   push:
-    branches: [main]
+    branches: [main, "feature/**"]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  python-quality-gate:
+  python-core:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-          cache: pip
-
-      - name: Install foundation packages
+      - name: Install deterministic core
         run: |
           python -m pip install --upgrade pip
           pip install -e "packages/andalus-pattern-engine[dev]"
+          pip install -e "packages/floorplan-engine[dev]"
+          pip install -e "packages/andalus-architecture-engine[dev]"
           pip install -e "services/ai-api[dev]"
-
       - name: Ruff
         run: |
           ruff check packages/andalus-pattern-engine/src packages/andalus-pattern-engine/tests
+          ruff check packages/floorplan-engine/src packages/floorplan-engine/tests
+          ruff check packages/andalus-architecture-engine/src packages/andalus-architecture-engine/tests
           ruff check services/ai-api/src services/ai-api/tests
-
       - name: Tests
         run: |
-          pytest -q packages/andalus-pattern-engine/tests services/ai-api/tests
-
+          pytest -q \
+            packages/andalus-pattern-engine/tests \
+            packages/floorplan-engine/tests \
+            packages/andalus-architecture-engine/tests \
+            services/ai-api/tests
       - name: Import smoke test
         run: |
           python - <<'PY'
-          from andalus_pattern_engine import StarPattern, generate_star_svg
+          from andalus_pattern_engine import ZellijGrid, generate_zellij_svg
+          from andalus_floorplan import FloorPlan
+          from andalus_architecture import HorseshoeArch
           from nexvary_andalus_api import app
-          assert generate_star_svg(StarPattern()).startswith("<svg")
-          assert app.title == "Nexvary Andalus Studio API"
-          print("foundation smoke test: PASS")
+          assert "<svg" in generate_zellij_svg(ZellijGrid(cells=2))
+          assert FloorPlan().summary()["roomCount"] == 0
+          assert HorseshoeArch().approximate_clear_area > 0
+          assert app.version == "0.4.25"
+          print("Stage 425 Python gate: PASS")
           PY
+
+  web-studio:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web-3d
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install
+        run: npm install --no-audit --no-fund
+      - name: TypeScript + Vite build
+        run: npm run build
+
+  android-source:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/android
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "9.6.0"
+      - name: Install Android SDK platforms
+        run: sdkmanager "platforms;android-37" "build-tools;36.0.0"
+      - name: Assemble debug
+        run: gradle :app:assembleDebug --stacktrace
