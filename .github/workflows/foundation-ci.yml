@@ -1,0 +1,48 @@
+name: Foundation CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  python-quality-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install foundation packages
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e "packages/andalus-pattern-engine[dev]"
+          pip install -e "services/ai-api[dev]"
+
+      - name: Ruff
+        run: |
+          ruff check packages/andalus-pattern-engine/src packages/andalus-pattern-engine/tests
+          ruff check services/ai-api/src services/ai-api/tests
+
+      - name: Tests
+        run: |
+          pytest -q packages/andalus-pattern-engine/tests services/ai-api/tests
+
+      - name: Import smoke test
+        run: |
+          python - <<'PY'
+          from andalus_pattern_engine import StarPattern, generate_star_svg
+          from nexvary_andalus_api import app
+          assert generate_star_svg(StarPattern()).startswith("<svg")
+          assert app.title == "Nexvary Andalus Studio API"
+          print("foundation smoke test: PASS")
+          PY

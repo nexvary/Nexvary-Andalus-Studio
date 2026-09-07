@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nexvary.com/schemas/andalus-project.schema.json",
+  "title": "Nexvary Andalus Studio Project",
+  "type": "object",
+  "required": ["projectId", "name", "styleSchool", "locks", "units"],
+  "properties": {
+    "projectId": {"type": "string", "minLength": 1},
+    "name": {"type": "string", "minLength": 1},
+    "locale": {"type": "string", "default": "ar"},
+    "units": {"type": "string", "enum": ["metric", "imperial"], "default": "metric"},
+    "styleSchool": {
+      "type": "string",
+      "enum": [
+        "nasrid-granada",
+        "cordoban",
+        "moroccan-andalusian",
+        "mamluk",
+        "ottoman",
+        "damascene",
+        "contemporary-andalusian"
+      ]
+    },
+    "ornamentIntensity": {
+      "type": "string",
+      "enum": ["calm", "balanced", "luxury", "royal", "historic"]
+    },
+    "locks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["massing", "floorCount", "openings", "entrance", "roofline", "roomBoundaries"],
+      "properties": {
+        "massing": {"type": "boolean", "default": true},
+        "floorCount": {"type": "boolean", "default": true},
+        "openings": {"type": "boolean", "default": true},
+        "entrance": {"type": "boolean", "default": false},
+        "roofline": {"type": "boolean", "default": true},
+        "roomBoundaries": {"type": "boolean", "default": true}
+      }
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "kind": {"type": "string", "enum": ["photo", "floorplan", "scan", "blank"]},
+        "provenance": {"type": "string"}
+      }
+    }
+  },
+  "additionalProperties": true
+}
