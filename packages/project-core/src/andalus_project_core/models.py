@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from copy import deepcopy
-from dataclasses import dataclass
-from hashlib import sha256
 import json
 import math
 import re
+from copy import deepcopy
+from dataclasses import dataclass
+from hashlib import sha256
 from typing import Any
 
 _PROJECT_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,119}$")
@@ -25,7 +25,7 @@ def _validate_json_value(value: Any, path: str = "$") -> None:
     if isinstance(value, dict):
         for key, item in value.items():
             if not isinstance(key, str):
-                raise ValueError(f"non-string object key at {path}")
+                raise TypeError(f"non-string object key at {path}")
             _validate_json_value(item, f"{path}.{key}")
         return
     raise ValueError(f"unsupported value at {path}: {type(value).__name__}")
@@ -60,11 +60,11 @@ class ProjectSnapshot:
         if self.revision < 1:
             raise ValueError("revision must be >= 1")
         _validate_json_value(self.payload)
-        if self.parent_fingerprint is not None:
-            if len(self.parent_fingerprint) != 64 or any(
-                ch not in "0123456789abcdef" for ch in self.parent_fingerprint
-            ):
-                raise ValueError("parent_fingerprint must be a lowercase SHA-256 hex digest")
+        if self.parent_fingerprint is not None and (
+            len(self.parent_fingerprint) != 64
+            or any(ch not in "0123456789abcdef" for ch in self.parent_fingerprint)
+        ):
+            raise ValueError("parent_fingerprint must be a lowercase SHA-256 hex digest")
 
     @property
     def fingerprint(self) -> str:
