@@ -12,12 +12,50 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  dependency-review:
+  github-dependency-review:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    continue-on-error: true
     steps:
-      - name: Review dependency changes
+      - name: GitHub dependency review when dependency graph is available
         uses: actions/dependency-review-action@v5
         with:
           fail-on-severity: high
           show-openssf-scorecard: true
+
+  python-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            packages/security-core/pyproject.toml
+            services/ai-api/pyproject.toml
+      - name: Build isolated audit environment
+        run: |
+          python -m pip install --upgrade pip
+          pip install "pip-audit>=2.9,<3"
+          pip install -e packages/security-core
+          pip install -e services/ai-api
+      - name: Audit installed Python dependency graph
+        run: pip-audit --local
+
+  web-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: apps/web-3d
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Resolve web dependencies
+        run: npm install --no-audit --no-fund
+      - name: Audit web dependency graph
+        run: npm audit --audit-level=high
