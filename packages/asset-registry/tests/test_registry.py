@@ -1,6 +1,6 @@
 import pytest
 
-from andalus_assets import AssetRecord, AssetRegistry, DEFAULT_ASSETS
+from andalus_assets import DEFAULT_ASSETS, AssetRecord, AssetRegistry
 
 
 def test_default_assets_are_reviewed():
