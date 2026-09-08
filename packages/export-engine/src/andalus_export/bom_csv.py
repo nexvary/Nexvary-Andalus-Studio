@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import csv
 import io
-from typing import Iterable, Mapping, Any
+from collections.abc import Iterable, Mapping
+from typing import Any
 
 _COLUMNS = (
     "material_id",

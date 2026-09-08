@@ -1,2 +1,3 @@
-from .registry import AssetRecord, AssetRegistry, DEFAULT_ASSETS, digest_file
-__all__ = ["AssetRecord", "AssetRegistry", "DEFAULT_ASSETS", "digest_file"]
+from .registry import DEFAULT_ASSETS, AssetRecord, AssetRegistry, digest_file
+
+__all__ = ["DEFAULT_ASSETS", "AssetRecord", "AssetRegistry", "digest_file"]

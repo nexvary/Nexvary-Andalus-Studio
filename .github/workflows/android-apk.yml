@@ -1,12 +1,7 @@
-name: Android APK Build
+name: Android APK + Android 15 Visual Release Gate
 
 on:
   push:
-    branches: [main]
-    paths:
-      - "apps/android/**"
-      - ".github/workflows/android-apk.yml"
-  pull_request:
     branches: [main]
     paths:
       - "apps/android/**"
@@ -16,13 +11,14 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: android-release-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build-debug-apk:
+  build-and-visual-smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-    defaults:
-      run:
-        working-directory: apps/android
+    timeout-minutes: 40
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -42,24 +38,51 @@ jobs:
           gradle-version: "9.6.0"
 
       - name: Install Android platform and build tools
-        run: sdkmanager "platform-tools" "platforms;android-37" "build-tools;36.0.0"
+        working-directory: apps/android
+        run: sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
 
-      - name: Assemble debug APK
+      - name: Assemble debug APK once
+        working-directory: apps/android
         run: gradle :app:assembleDebug --stacktrace --no-daemon
 
       - name: Collect APK and checksum
         run: |
-          test -f app/build/outputs/apk/debug/app-debug.apk
-          mkdir -p ../../artifacts
-          cp app/build/outputs/apk/debug/app-debug.apk ../../artifacts/Nexvary-Andalus-Studio-v0.8.25-debug.apk
-          sha256sum ../../artifacts/Nexvary-Andalus-Studio-v0.8.25-debug.apk > ../../artifacts/Nexvary-Andalus-Studio-v0.8.25-debug.apk.sha256
+          test -f apps/android/app/build/outputs/apk/debug/app-debug.apk
+          mkdir -p artifacts/android15
+          cp apps/android/app/build/outputs/apk/debug/app-debug.apk artifacts/Nexvary-Andalus-Studio-v0.8.25-debug.apk
+          sha256sum artifacts/Nexvary-Andalus-Studio-v0.8.25-debug.apk > artifacts/Nexvary-Andalus-Studio-v0.8.25-debug.apk.sha256
 
-      - name: Upload APK artifact
+      - name: Enable KVM
+        run: sudo chmod 666 /dev/kvm || true
+
+      - name: Boot Android 15, install, launch and capture
+        uses: ReactiveCircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          profile: pixel_7
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          script: |
+            set -e
+            adb install -r artifacts/Nexvary-Andalus-Studio-v0.8.25-debug.apk
+            adb shell am force-stop com.nexvary.andalus
+            adb shell am start -W -n com.nexvary.andalus/.MainActivity
+            sleep 5
+            adb shell dumpsys activity activities | grep -q "com.nexvary.andalus"
+            adb exec-out screencap -p > artifacts/android15/home.png
+            adb shell uiautomator dump /sdcard/window.xml || true
+            adb pull /sdcard/window.xml artifacts/android15/window.xml || true
+            test -s artifacts/android15/home.png
+
+      - name: Upload APK and Android 15 evidence
         uses: actions/upload-artifact@v4
         with:
-          name: Nexvary-Andalus-Studio-v0.8.25-debug
+          name: Nexvary-Andalus-Studio-v0.8.25-release-evidence
           path: |
             artifacts/Nexvary-Andalus-Studio-v0.8.25-debug.apk
             artifacts/Nexvary-Andalus-Studio-v0.8.25-debug.apk.sha256
+            artifacts/android15/
           if-no-files-found: error
           retention-days: 14

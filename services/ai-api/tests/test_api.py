@@ -2,7 +2,6 @@ from fastapi.testclient import TestClient
 
 from nexvary_andalus_api import app
 
-
 client = TestClient(app)
 
 

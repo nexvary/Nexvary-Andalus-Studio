@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, asdict
+import re
+from collections.abc import Iterable
+from dataclasses import asdict, dataclass
 from hashlib import sha256
 from pathlib import Path
-import re
-from typing import Iterable
 
 _ASSET_ID = re.compile(r"^[a-z0-9][a-z0-9_.-]{0,119}$")
 _ALLOWED_LICENSES = {"CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "MIT", "Apache-2.0", "BSD-3-Clause", "NEXVARY-INTERNAL"}
@@ -34,9 +34,11 @@ class AssetRecord:
             raise ValueError(f"license {self.license_id} is not in the reviewed allowlist")
         if self.license_id.startswith("CC-BY") and not (self.author or self.attribution_text):
             raise ValueError("attribution is required for CC-BY assets")
-        if self.content_sha256 is not None:
-            if len(self.content_sha256) != 64 or any(ch not in "0123456789abcdef" for ch in self.content_sha256):
-                raise ValueError("content_sha256 must be lowercase SHA-256 hex")
+        if self.content_sha256 is not None and (
+            len(self.content_sha256) != 64
+            or any(ch not in "0123456789abcdef" for ch in self.content_sha256)
+        ):
+            raise ValueError("content_sha256 must be lowercase SHA-256 hex")
         if not self.commercial_use:
             raise ValueError("non-commercial assets are not allowed in the product registry")
 

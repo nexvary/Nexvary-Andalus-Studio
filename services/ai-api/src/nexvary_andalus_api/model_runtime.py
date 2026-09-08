@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
-from enum import Enum
 import json
 import os
+from collections.abc import Callable
+from dataclasses import asdict, dataclass
+from datetime import UTC, datetime
+from enum import Enum
 from threading import RLock
-from typing import Any, Callable
+from typing import Any
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
@@ -77,7 +78,7 @@ class JobManager:
                 job_id,
                 adapter_id,
                 JobStatus.QUEUED,
-                datetime.now(timezone.utc).isoformat(),
+                datetime.now(UTC).isoformat(),
                 idempotency_key,
                 request_digest=request_digest,
             )

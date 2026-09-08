@@ -1,18 +1,17 @@
 from __future__ import annotations
 
+import os
 from dataclasses import asdict
 from functools import lru_cache
-import os
 from pathlib import Path
 from typing import Any, Literal
-
-from fastapi import APIRouter, HTTPException, Query
-from fastapi.responses import PlainTextResponse
-from pydantic import BaseModel, Field
 
 from andalus_assets import DEFAULT_ASSETS
 from andalus_project_core import ProjectConflictError, ProjectSnapshot, SQLiteProjectRepository
 from andalus_scene import GltfWall, walls_to_gltf
+from fastapi import APIRouter, HTTPException, Query
+from fastapi.responses import PlainTextResponse
+from pydantic import BaseModel, Field
 
 from .model_runtime import DryRunAdapter, JobManager, JobStatus, configured_adapters, job_to_dict
 from .orchestrator import compile_generation_plan

@@ -3,12 +3,12 @@ from .sqlite_repo import ProjectConflictError, ProjectHead, SQLiteProjectReposit
 from .storage import RevisionStore
 
 __all__ = [
+    "ProjectConflictError",
+    "ProjectHead",
     "ProjectSnapshot",
     "RevisionStore",
+    "SQLiteProjectRepository",
     "canonical_json",
     "diff_paths",
     "project_fingerprint",
-    "ProjectConflictError",
-    "ProjectHead",
-    "SQLiteProjectRepository",
 ]

@@ -3,9 +3,6 @@ from __future__ import annotations
 from dataclasses import asdict
 from typing import Literal
 
-from fastapi import FastAPI, HTTPException, Query
-from pydantic import BaseModel, Field
-
 from andalus_architecture import Courtyard, HorseshoeArch, horseshoe_arch_svg
 from andalus_floorplan import FloorPlan, Opening, Point, Room, Wall, floorplan_to_svg
 from andalus_pattern_engine import (
@@ -19,13 +16,15 @@ from andalus_pattern_engine import (
     generate_star_svg,
     generate_zellij_svg,
 )
+from fastapi import FastAPI, HTTPException, Query
+from pydantic import BaseModel, Field
 
 from .planner import DesignIntent, compose_design_prompt
 from .styles import list_styles
 
 app = FastAPI(
     title="Nexvary Andalus Studio API",
-    version="0.4.25",
+    version="0.8.25",
     description=(
         "Geometry, style intelligence and AI orchestration API for Andalusian "
         "and Islamic design workflows."
@@ -126,7 +125,7 @@ class FloorPlanResponse(BaseModel):
 
 @app.get("/health", response_model=HealthResponse)
 def health() -> HealthResponse:
-    return HealthResponse(status="ok", service="nexvary-andalus-ai-api", version="0.4.25")
+    return HealthResponse(status="ok", service="nexvary-andalus-ai-api", version="0.8.25")
 
 
 @app.get("/v1/styles", response_model=list[StyleResponse])

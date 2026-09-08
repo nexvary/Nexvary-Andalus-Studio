@@ -5,7 +5,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-import nexvary_andalus_api.stage825 as stage825
+from nexvary_andalus_api import stage825
 
 
 def client_for(tmp_path: Path) -> TestClient:

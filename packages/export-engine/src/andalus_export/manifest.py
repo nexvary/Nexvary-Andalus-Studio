@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+import json
+from collections.abc import Iterable
 from dataclasses import dataclass
 from hashlib import sha256
-import json
-from typing import Iterable
 
 
 @dataclass(frozen=True)
