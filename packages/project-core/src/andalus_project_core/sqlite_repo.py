@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import datetime, timezone
 import json
-from pathlib import Path
 import sqlite3
-from typing import Any
+from dataclasses import dataclass
+from datetime import UTC, datetime
+from pathlib import Path
 
 from .models import ProjectSnapshot, canonical_json
 
@@ -70,7 +69,7 @@ class SQLiteProjectRepository:
 
     def save(self, snapshot: ProjectSnapshot, *, expected_parent: str | None = None) -> ProjectHead:
         snapshot.validate()
-        now = snapshot.created_at or datetime.now(timezone.utc).isoformat()
+        now = snapshot.created_at or datetime.now(UTC).isoformat()
         payload_json = canonical_json(snapshot.payload)
         with self._connect() as db:
             db.execute("BEGIN IMMEDIATE")
