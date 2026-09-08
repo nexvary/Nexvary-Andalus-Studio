@@ -10,14 +10,30 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: stage825-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   python-core:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            packages/andalus-pattern-engine/pyproject.toml
+            packages/floorplan-engine/pyproject.toml
+            packages/andalus-architecture-engine/pyproject.toml
+            packages/project-core/pyproject.toml
+            packages/materials-engine/pyproject.toml
+            packages/export-engine/pyproject.toml
+            packages/asset-registry/pyproject.toml
+            packages/scene-export/pyproject.toml
+            services/ai-api/pyproject.toml
       - name: Install deterministic packages
         run: |
           python -m pip install --upgrade pip
@@ -73,6 +89,7 @@ jobs:
 
   web-studio:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: apps/web-3d
@@ -86,6 +103,7 @@ jobs:
 
   android-source:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: apps/android
