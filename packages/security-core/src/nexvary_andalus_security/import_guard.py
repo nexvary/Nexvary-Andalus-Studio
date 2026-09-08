@@ -23,13 +23,23 @@ class ImportDecision:
 
 
 DEFAULT_POLICY = ImportPolicy(
-    allowed_extensions=frozenset({".jpg", ".jpeg", ".png", ".webp", ".pdf", ".dxf", ".ifc", ".glb", ".gltf"}),
+    allowed_extensions=frozenset(
+        {".jpg", ".jpeg", ".png", ".webp", ".pdf", ".dxf", ".ifc", ".glb", ".gltf"}
+    ),
     max_bytes=64 * 1024 * 1024,
 )
 
 
 def _extension(filename: str) -> str:
     return PurePath(filename).suffix.lower()
+
+
+def _safe_client_filename(filename: str) -> bool:
+    if not filename or len(filename) > 255 or "\x00" in filename:
+        return False
+    if "/" in filename or "\\" in filename:
+        return False
+    return not any(ord(char) < 32 for char in filename)
 
 
 def _signature_matches(ext: str, data: bytes) -> bool:
@@ -60,9 +70,11 @@ def inspect_upload(
     data: bytes,
     policy: ImportPolicy = DEFAULT_POLICY,
 ) -> ImportDecision:
-    ext = _extension(filename)
     size = len(data)
+    if not _safe_client_filename(filename):
+        return ImportDecision(False, "unsafe_filename", None, None, size)
 
+    ext = _extension(filename)
     if ext not in policy.allowed_extensions:
         return ImportDecision(False, "extension_not_allowed", None, None, size)
     if size == 0:
@@ -85,7 +97,7 @@ def safe_remote_url(url: str) -> bool:
     """
 
     parsed = urlparse(url)
-    if parsed.scheme != "https" or not parsed.hostname:
+    if parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password:
         return False
 
     host = parsed.hostname.lower().rstrip(".")
