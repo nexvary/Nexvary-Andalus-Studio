@@ -9,6 +9,7 @@ description = "API service for Nexvary Andalus Studio"
 requires-python = ">=3.11"
 dependencies = [
   "fastapi>=0.115,<1",
+  "nexvary-andalus-security-core==0.8.25",
   "pydantic>=2.9,<3",
   "uvicorn>=0.32,<1"
 ]
