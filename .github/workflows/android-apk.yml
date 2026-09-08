@@ -42,7 +42,7 @@ jobs:
           gradle-version: "9.6.0"
 
       - name: Install Android platform and build tools
-        run: sdkmanager "platform-tools" "platforms;android-37" "build-tools;36.0.0"
+        run: sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
 
       - name: Assemble debug APK
         run: gradle :app:assembleDebug --stacktrace --no-daemon
