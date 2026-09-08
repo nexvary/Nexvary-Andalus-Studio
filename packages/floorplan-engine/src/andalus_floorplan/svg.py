@@ -20,8 +20,10 @@ def floorplan_to_svg(plan: FloorPlan, scale: float = 80.0, padding: float = 24.0
         return (y - min_y) * scale + padding
 
     parts = [
-        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width:.2f} {height:.2f}" '
-        'role="img" aria-label="Nexvary Andalus floor plan">'
+        (
+            f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width:.2f} {height:.2f}" '
+            'role="img" aria-label="Nexvary Andalus floor plan">'
+        )
     ]
 
     for room in plan.rooms:
