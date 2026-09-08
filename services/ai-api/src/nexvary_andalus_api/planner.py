@@ -4,7 +4,6 @@ from dataclasses import dataclass
 
 from .styles import get_style
 
-
 LOCK_LABELS = {
     "massing": "overall building massing",
     "floorCount": "number of floors",
@@ -63,8 +62,10 @@ def compose_design_prompt(intent: DesignIntent) -> dict[str, object]:
         f"Redesign the {intent.space_type} in {style.name_en} style.",
         *style.prompt_tokens,
         f"Ornament intensity: {intent.ornament_intensity}.",
-        "Preserve realistic scale, material junctions, openings, circulation, "
-        "and buildable proportions.",
+        (
+            "Preserve realistic scale, material junctions, openings, circulation, "
+            "and buildable proportions."
+        ),
     ]
     if preserved:
         prompt_parts.append("Do not alter: " + ", ".join(preserved) + ".")
