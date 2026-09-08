@@ -30,6 +30,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,8 +38,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 
 private val Navy = Color(0xFF06131F)
@@ -78,14 +81,16 @@ private fun StudioApp() {
     var screen by remember { mutableStateOf("home") }
     BackHandler(enabled = screen != "home") { screen = "home" }
 
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        containerColor = Navy,
-    ) { innerPadding ->
-        if (screen == "home") {
-            Dashboard(padding = innerPadding, onOpen = { screen = it })
-        } else {
-            FeatureScreen(key = screen, padding = innerPadding, onBack = { screen = "home" })
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            containerColor = Navy,
+        ) { innerPadding ->
+            if (screen == "home") {
+                Dashboard(padding = innerPadding, onOpen = { screen = it })
+            } else {
+                FeatureScreen(key = screen, padding = innerPadding, onBack = { screen = "home" })
+            }
         }
     }
 }
@@ -97,15 +102,15 @@ private fun Dashboard(
 ) {
     val tools = listOf(
         "projects" to StudioTool("المشاريع والإصدارات", "حفظ النسخ وتتبع البصمات ومنع تعارض التعديلات", "SYNC"),
-        "ai" to StudioTool("المعماري الذكي", "خطط AI مع Architectural Lock وحالة Jobs", "LOCK"),
-        "plan" to StudioTool("المخطط 2D", "الجدران والغرف والفتحات والقياسات"),
-        "3d" to StudioTool("الاستوديو 3D", "مشاهد حقيقية القياس وتصدير glTF 2.0", "glTF"),
-        "patterns" to StudioTool("Pattern Studio", "الزليج والنجوم والروسيات والحدود"),
+        "ai" to StudioTool("المعماري الذكي", "خطط الذكاء الاصطناعي مع القفل المعماري وحالة المهام", "LOCK"),
+        "plan" to StudioTool("المخطط ثنائي الأبعاد", "الجدران والغرف والفتحات والقياسات", "2D"),
+        "3d" to StudioTool("الاستوديو ثلاثي الأبعاد", "مشاهد بأبعاد حقيقية وتصدير النماذج", "3D"),
+        "patterns" to StudioTool("استوديو الزخارف", "الزليج والنجوم والروسيات والحدود", "PATTERN"),
         "assets" to StudioTool("مكتبة الأصول", "أصول مرخصة مع المصدر والترخيص والبصمة", "LICENSE"),
-        "materials" to StudioTool("الخامات والكميات", "BOM والهالك والأسعار التي يدخلها المستخدم"),
-        "exports" to StudioTool("مركز التصدير", "SVG وDXF وCSV وglTF مع Manifest"),
-        "ar" to StudioTool("الواقع المعزز", "معاينة العناصر على الأجهزة المدعومة", "HW GATE"),
-        "library" to StudioTool("مكتبة الأندلس", "غرناطة وقرطبة والمغرب والمدارس الإسلامية"),
+        "materials" to StudioTool("الخامات والكميات", "جداول الكميات والهالك والأسعار التي يدخلها المستخدم", "BOM"),
+        "exports" to StudioTool("مركز التصدير", "تصدير الملفات الهندسية مع بيان المصدر والبصمة", "EXPORT"),
+        "ar" to StudioTool("الواقع المعزز", "معاينة العناصر على الأجهزة المدعومة", "AR"),
+        "library" to StudioTool("مكتبة الأندلس", "غرناطة وقرطبة والمغرب والمدارس الإسلامية", "LIB"),
     )
 
     LazyColumn(
@@ -119,17 +124,26 @@ private fun Dashboard(
     ) {
         item {
             Spacer(Modifier.height(12.dp))
-            Text("Nexvary Andalus Studio", color = Gold, fontWeight = FontWeight.Bold)
+            Text(
+                "Nexvary Andalus Studio",
+                modifier = Modifier.fillMaxWidth(),
+                color = Gold,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Start,
+            )
             Text(
                 "Stage 825 • Production Runtime Foundation • v0.8.25",
+                modifier = Modifier.fillMaxWidth(),
                 color = Emerald,
                 style = MaterialTheme.typography.bodySmall,
+                textAlign = TextAlign.Start,
             )
             Text(
                 "العمارة الأندلسية والتصميم الإسلامي بالذكاء الاصطناعي",
+                modifier = Modifier.fillMaxWidth(),
                 color = Muted,
                 style = MaterialTheme.typography.bodySmall,
-                textAlign = TextAlign.Right,
+                textAlign = TextAlign.Start,
             )
             Spacer(Modifier.height(10.dp))
         }
@@ -148,9 +162,21 @@ private fun Dashboard(
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     Column(Modifier.weight(1f)) {
-                        Text(tool.title, color = Ivory, fontWeight = FontWeight.SemiBold)
+                        Text(
+                            tool.title,
+                            modifier = Modifier.fillMaxWidth(),
+                            color = Ivory,
+                            fontWeight = FontWeight.SemiBold,
+                            textAlign = TextAlign.Start,
+                        )
                         Spacer(Modifier.height(5.dp))
-                        Text(tool.subtitle, color = Muted, style = MaterialTheme.typography.bodySmall)
+                        Text(
+                            tool.subtitle,
+                            modifier = Modifier.fillMaxWidth(),
+                            color = Muted,
+                            style = MaterialTheme.typography.bodySmall,
+                            textAlign = TextAlign.Start,
+                        )
                     }
                     if (tool.badge != null) {
                         Text(tool.badge, color = Gold, style = MaterialTheme.typography.labelSmall)
@@ -171,9 +197,9 @@ private fun FeatureScreen(
     val title = when (key) {
         "projects" -> "المشاريع والإصدارات"
         "ai" -> "المعماري الذكي"
-        "plan" -> "المخطط 2D"
-        "3d" -> "الاستوديو 3D"
-        "patterns" -> "Pattern Studio"
+        "plan" -> "المخطط ثنائي الأبعاد"
+        "3d" -> "الاستوديو ثلاثي الأبعاد"
+        "patterns" -> "استوديو الزخارف"
         "assets" -> "مكتبة الأصول"
         "materials" -> "الخامات والكميات"
         "exports" -> "مركز التصدير"
@@ -217,38 +243,38 @@ private fun FeatureScreen(
 private fun CapabilityPanel(key: String) {
     val lines = when (key) {
         "projects" -> listOf(
-            "SQLite transactional repository",
-            "Immutable revision fingerprints",
-            "Optimistic concurrency conflict protection",
+            "حفظ معاملات موثوق للمشاريع",
+            "بصمة ثابتة لكل إصدار",
+            "منع تعارض التعديلات المتزامنة",
         )
         "3d" -> listOf(
-            "Real-world wall dimensions",
-            "glTF 2.0 scene export",
-            "Scene export tied to project fingerprint",
+            "أبعاد الجدران بالمقاييس الحقيقية",
+            "تصدير مشاهد ثلاثية الأبعاد",
+            "ربط التصدير ببصمة إصدار المشروع",
         )
         "assets" -> listOf(
-            "Source URL + license + attribution",
-            "SHA-256 integrity digest",
-            "Commercial-use and review gate",
+            "المصدر والترخيص ونسبة العمل لصاحبه",
+            "بصمة سلامة للملفات",
+            "بوابة مراجعة قبل الاستخدام التجاري",
         )
         "materials" -> listOf(
-            "Surface takeoff and waste",
-            "BOM aggregation",
-            "Costs only from user-supplied unit prices",
+            "حساب المساحات والهالك",
+            "تجميع جداول الكميات",
+            "التكلفة تعتمد فقط على سعر الوحدة الذي يدخله المستخدم",
         )
         "exports" -> listOf(
-            "SVG patterns and floor plans",
-            "DXF R12 and UTF-8 CSV",
-            "glTF 2.0 scene export",
+            "تصدير الزخارف والمخططات",
+            "ملفات هندسية وجداول كميات",
+            "تصدير المشهد ثلاثي الأبعاد",
         )
         "ar" -> listOf(
-            "SceneView / ARSceneView integration",
-            "Camera capability is hardware-gated",
-            "No release claim before real-device QA",
+            "دمج العرض ثلاثي الأبعاد والواقع المعزز",
+            "تشغيل الكاميرا حسب قدرات الجهاز",
+            "لا اعتماد للميزة قبل اختبار جهاز حقيقي",
         )
-        "plan" -> listOf("Room area/perimeter", "Wall/opening validation", "Deterministic geometry model")
-        "patterns" -> listOf("Stars", "Rosettes", "Zellij grids", "Borders")
-        else -> listOf("Nasrid Granada", "Cordoban", "Moroccan-Andalusian", "Contemporary Andalusian")
+        "plan" -> listOf("مساحات ومحيط الغرف", "التحقق من الجدران والفتحات", "نموذج هندسي حتمي")
+        "patterns" -> listOf("النجوم", "الروسيات", "شبكات الزليج", "الحدود")
+        else -> listOf("المدرسة الغرناطية النصرية", "القرطبية", "المغربية الأندلسية", "الأندلسية المعاصرة")
     }
 
     Surface(
@@ -259,7 +285,7 @@ private fun CapabilityPanel(key: String) {
         Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             lines.forEach { line -> Text("• $line", color = Ivory) }
             Text(
-                "الواجهات الثقيلة أو المعتمدة على الأجهزة لا تُعتبر Release-ready قبل اجتياز بوابة البناء والاختبار الفعلي.",
+                "الواجهات الثقيلة أو المعتمدة على الأجهزة لا تُعتبر جاهزة للإصدار قبل اجتياز بوابة البناء والاختبار الفعلي.",
                 color = Muted,
                 style = MaterialTheme.typography.bodySmall,
             )
@@ -279,7 +305,7 @@ private fun ArchitecturalLocks() {
     )
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(
-            "ثبّت العناصر التي لا تسمح للذكاء الاصطناعي بتغييرها. نتيجة AI التي تكسر قفلًا تُرفض برمجيًا.",
+            "ثبّت العناصر التي لا تسمح للذكاء الاصطناعي بتغييرها. أي نتيجة تكسر قفلًا تُرفض برمجيًا.",
             color = Muted,
             style = MaterialTheme.typography.bodySmall,
         )
