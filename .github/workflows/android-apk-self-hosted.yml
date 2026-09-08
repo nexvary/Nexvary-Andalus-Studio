@@ -31,7 +31,7 @@ jobs:
       - name: Install Android platform and build tools
         shell: powershell
         run: |
-          sdkmanager "platforms;android-37" "build-tools;36.0.0"
+          sdkmanager "platforms;android-36" "build-tools;36.0.0"
 
       - name: Setup Gradle 9.6.0
         uses: gradle/actions/setup-gradle@v4
