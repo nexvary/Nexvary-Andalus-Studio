@@ -3,13 +3,12 @@ from __future__ import annotations
 from dataclasses import asdict
 from typing import Any, Literal
 
-from fastapi import APIRouter, HTTPException
-from fastapi.responses import PlainTextResponse
-from pydantic import BaseModel, Field
-
 from andalus_export import DxfWall, bom_to_csv, walls_to_dxf
 from andalus_materials import SurfaceTakeoff, estimate_bom, estimate_surface, list_materials
 from andalus_project_core import ProjectSnapshot, project_fingerprint
+from fastapi import APIRouter, HTTPException
+from fastapi.responses import PlainTextResponse
+from pydantic import BaseModel, Field
 
 from .orchestrator import compile_generation_plan, validate_locked_candidate
 
