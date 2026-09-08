@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from html import escape
 from math import cos, pi, sin
-from typing import Iterable
 
 
 Point = tuple[float, float]
@@ -163,8 +163,10 @@ def generate_zellij_svg(pattern: ZellijGrid) -> str:
     pattern.validate()
     size = pattern.cells * pattern.tile_size
     pieces: list[str] = [
-        '<rect width="100%" height="100%" fill="none" stroke="currentColor" '
-        'stroke-width="1" vector-effect="non-scaling-stroke"/>'
+        (
+            '<rect width="100%" height="100%" fill="none" stroke="currentColor" '
+            'stroke-width="1" vector-effect="non-scaling-stroke"/>'
+        )
     ]
     outer = pattern.tile_size * 0.42
     inner = outer * pattern.inset_ratio
