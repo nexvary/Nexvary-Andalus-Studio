@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.nexvary.andalus"
-    compileSdk = 37
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.nexvary.andalus"
