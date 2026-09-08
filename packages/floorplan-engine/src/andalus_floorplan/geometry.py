@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from math import hypot
-from typing import Iterable
 
 
 @dataclass(frozen=True)
