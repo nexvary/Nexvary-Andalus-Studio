@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from html import escape
 from math import cos, pi, sin
 
-
 Point = tuple[float, float]
 
 
