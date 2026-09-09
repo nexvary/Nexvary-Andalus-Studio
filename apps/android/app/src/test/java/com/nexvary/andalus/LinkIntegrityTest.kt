@@ -36,8 +36,27 @@ class LinkIntegrityTest {
             services.values.forEach {
                 assertTrue(it.title.isNotBlank())
                 assertTrue(it.subtitle.isNotBlank())
+                assertTrue(it.badge.isNotBlank())
             }
+
+            val ui = StudioLocalization.ui(language)
+            assertTrue(ui.home.isNotBlank())
+            assertTrue(ui.services.isNotBlank())
+            assertTrue(ui.about.isNotBlank())
+            assertTrue(ui.back.isNotBlank())
+            assertTrue(ui.language.isNotBlank())
+            assertTrue(ui.aboutTitle.isNotBlank())
+            assertTrue(ui.contactTitle.isNotBlank())
         }
+    }
+
+    @Test
+    fun supportedLanguageSetIsExactlyTheReleaseSet() {
+        val supported = AppLanguage.entries.map { it.code }.toSet()
+        assertEquals(
+            setOf("ar", "en", "tr", "es", "de", "it", "fr", "ur", "fa", "ru"),
+            supported,
+        )
     }
 
     @Test
