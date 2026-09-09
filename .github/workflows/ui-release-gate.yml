@@ -38,6 +38,12 @@ jobs:
       - name: Android lint
         working-directory: apps/android
         run: gradle :app:lintDebug --stacktrace --no-daemon
+      - name: Enable KVM acceleration
+        run: |
+          if [ -e /dev/kvm ]; then
+            sudo chmod 666 /dev/kvm
+            ls -l /dev/kvm
+          fi
       - name: UI Release Gate on Android 15
         uses: ReactiveCircus/android-emulator-runner@v2
         env:
