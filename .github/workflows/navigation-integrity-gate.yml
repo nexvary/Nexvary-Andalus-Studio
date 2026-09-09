@@ -1,0 +1,161 @@
+name: Navigation Integrity Gate
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "apps/android/**"
+      - ".github/workflows/navigation-integrity-gate.yml"
+      - ".github/workflows/ui-release-gate.yml"
+  push:
+    branches: [main]
+    paths:
+      - "apps/android/**"
+      - ".github/workflows/navigation-integrity-gate.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: navigation-integrity-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  navigation-and-ui-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "9.6.0"
+
+      - name: Install Android SDK
+        run: sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+
+      - name: Fast release preflight
+        working-directory: apps/android
+        run: >-
+          gradle
+          :app:testDebugUnitTest
+          :app:lintDebug
+          :app:assembleDebug
+          :app:assembleDebugAndroidTest
+          --stacktrace
+          --no-daemon
+
+      - name: Enable KVM acceleration
+        run: |
+          test -e /dev/kvm
+          sudo chmod 666 /dev/kvm
+          ls -l /dev/kvm
+
+      - name: Prepare deterministic Android gate runner
+        run: |
+          cat > /tmp/run-release-integrity.sh <<'EOF'
+          #!/usr/bin/env bash
+          set -euo pipefail
+          cd "${GITHUB_WORKSPACE}"
+
+          mkdir -p artifacts/release-integrity/instrumentation
+          mkdir -p artifacts/release-integrity/small-phone
+          mkdir -p artifacts/release-integrity/modern-phone
+
+          APP_APK="apps/android/app/build/outputs/apk/debug/app-debug.apk"
+          TEST_APK="$(find apps/android/app/build/outputs/apk/androidTest/debug -name '*androidTest.apk' -print -quit)"
+          test -s "${APP_APK}"
+          test -n "${TEST_APK}"
+          test -s "${TEST_APK}"
+
+          adb wait-for-device
+          adb install -r "${APP_APK}"
+          adb install -r -t "${TEST_APK}"
+
+          RUNNER="com.nexvary.andalus.test/androidx.test.runner.AndroidJUnitRunner"
+
+          run_gate() {
+            local class_name="$1"
+            local label="$2"
+            local output="artifacts/release-integrity/instrumentation/${label}.txt"
+
+            set +e
+            adb shell am instrument -w -r -e class "${class_name}" "${RUNNER}" | tee "${output}"
+            local adb_status=${PIPESTATUS[0]}
+            set -e
+
+            test "${adb_status}" -eq 0
+            grep -Fq "OK (" "${output}"
+            if grep -Eq "FAILURES!!!|INSTRUMENTATION_FAILED|Process crashed|shortMsg=Process crashed" "${output}"; then
+              echo "Instrumentation gate ${label} failed"
+              exit 1
+            fi
+          }
+
+          capture_ui() {
+            local folder="$1"
+            adb shell am force-stop com.nexvary.andalus
+            adb shell am start -W -n com.nexvary.andalus/.MainActivity
+            sleep 1
+            adb exec-out screencap -p > "artifacts/release-integrity/${folder}/home.png"
+            adb shell uiautomator dump /sdcard/window.xml || true
+            adb pull /sdcard/window.xml "artifacts/release-integrity/${folder}/window.xml" || true
+            test -s "artifacts/release-integrity/${folder}/home.png"
+          }
+
+          # Navigation Integrity Gate: every service route, in-page Back, system Back,
+          # primary tabs, About and all internal destinations.
+          run_gate "com.nexvary.andalus.NavigationIntegrityGateTest" "navigation-integrity"
+
+          # UI Release Gate on a compact phone viewport.
+          adb shell wm size 1080x1920
+          adb shell wm density 420
+          sleep 1
+          run_gate "com.nexvary.andalus.UiReleaseGateTest" "ui-small-phone"
+          capture_ui "small-phone"
+
+          # UI Release Gate on a modern tall phone viewport.
+          adb shell wm size 1080x2400
+          adb shell wm density 420
+          sleep 1
+          run_gate "com.nexvary.andalus.UiReleaseGateTest" "ui-modern-phone"
+          capture_ui "modern-phone"
+
+          adb shell wm size reset || true
+          adb shell wm density reset || true
+          EOF
+          chmod +x /tmp/run-release-integrity.sh
+
+      - name: Navigation Integrity Gate + UI Release Gate on Android 15
+        uses: ReactiveCircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          profile: pixel_7
+          cores: 2
+          disable-animations: true
+          emulator-boot-timeout: 180
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          script: /tmp/run-release-integrity.sh
+
+      - name: Capture logcat on failure
+        if: failure()
+        run: adb logcat -d > artifacts/release-integrity/logcat.txt || true
+
+      - name: Upload release integrity evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-release-integrity-evidence
+          path: |
+            artifacts/release-integrity/
+            apps/android/app/build/reports/tests/
+            apps/android/app/build/reports/lint-results-debug.html
+          if-no-files-found: warn
+          retention-days: 14
