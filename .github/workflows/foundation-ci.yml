@@ -33,6 +33,7 @@ jobs:
             packages/export-engine/pyproject.toml
             packages/asset-registry/pyproject.toml
             packages/scene-export/pyproject.toml
+            packages/security-core/pyproject.toml
             services/ai-api/pyproject.toml
       - name: Install deterministic packages
         run: |
@@ -45,6 +46,7 @@ jobs:
           pip install -e "packages/export-engine[dev]"
           pip install -e "packages/asset-registry[dev]"
           pip install -e "packages/scene-export[dev]"
+          pip install -e "packages/security-core[dev]"
           pip install -e "services/ai-api[dev]"
           pip install "jsonschema>=4.23,<5"
       - name: Ruff
@@ -57,6 +59,7 @@ jobs:
           ruff check packages/export-engine/src packages/export-engine/tests
           ruff check packages/asset-registry/src packages/asset-registry/tests
           ruff check packages/scene-export/src packages/scene-export/tests
+          ruff check packages/security-core/src packages/security-core/tests
           ruff check services/ai-api/src services/ai-api/tests
       - name: Tests
         run: |
@@ -69,6 +72,7 @@ jobs:
             packages/export-engine/tests \
             packages/asset-registry/tests \
             packages/scene-export/tests \
+            packages/security-core/tests \
             services/ai-api/tests
       - name: Schema and version gate
         run: |
@@ -76,7 +80,7 @@ jobs:
           import json
           from pathlib import Path
           from jsonschema import Draft202012Validator
-          from nexvary_andalus_api import app
+          from nexvary_andalus_api.app import app
 
           schema = json.loads(Path("packages/design-schema/andalus-project.schema.json").read_text())
           sample = json.loads(Path("packages/design-schema/sample-project.json").read_text())
@@ -117,5 +121,11 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "9.6.0"
+      - name: Android security policy gate
+        run: |
+          grep -q 'android:allowBackup="false"' app/src/main/AndroidManifest.xml
+          grep -q 'android:usesCleartextTraffic="false"' app/src/main/AndroidManifest.xml
+          grep -q 'android:networkSecurityConfig="@xml/network_security_config"' app/src/main/AndroidManifest.xml
+          grep -q 'cleartextTrafficPermitted="false"' app/src/main/res/xml/network_security_config.xml
       - run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
       - run: gradle :app:assembleDebug --stacktrace
