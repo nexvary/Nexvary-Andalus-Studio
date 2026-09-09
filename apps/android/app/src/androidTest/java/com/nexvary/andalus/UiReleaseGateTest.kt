@@ -2,9 +2,9 @@ package com.nexvary.andalus
 
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -34,13 +34,21 @@ class UiReleaseGateTest {
     fun arabicAndEnglishCopyRemainUsableInRtlAndLtr() {
         composeRule.onNodeWithTag("language-picker").performClick()
         composeRule.onNodeWithTag("lang-en").performClick()
-        composeRule.onNodeWithText("Home").assertIsDisplayed()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("language-picker").assertTextContains("English")
+        composeRule.onNodeWithTag("nav-home").assertTextContains("Home")
+
         composeRule.onNodeWithTag("nav-services").performClick()
-        composeRule.onNodeWithText("Services").assertIsDisplayed()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("screen-services").assertIsDisplayed()
+        composeRule.onNodeWithTag("nav-services").assertTextContains("Services")
 
         composeRule.onNodeWithTag("language-picker").performClick()
         composeRule.onNodeWithTag("lang-ar").performClick()
-        composeRule.onNodeWithText("الخدمات").assertIsDisplayed()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("language-picker").assertTextContains("العربية")
+        composeRule.onNodeWithTag("nav-services").assertTextContains("الخدمات")
+        composeRule.onNodeWithTag("screen-services").assertIsDisplayed()
     }
 
     @Test
