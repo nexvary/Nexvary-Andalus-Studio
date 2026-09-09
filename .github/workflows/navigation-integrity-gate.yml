@@ -48,11 +48,7 @@ jobs:
           profile: pixel_7
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
-          script: |
-            cd apps/android
-            gradle :app:connectedDebugAndroidTest \
-              -Pandroid.testInstrumentationRunnerArguments.class=com.nexvary.andalus.NavigationIntegrityGateTest \
-              --stacktrace --no-daemon
+          script: gradle -p apps/android :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.nexvary.andalus.NavigationIntegrityGateTest --stacktrace --no-daemon
       - name: Upload navigation test reports
         if: always()
         uses: actions/upload-artifact@v4
