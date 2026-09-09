@@ -49,21 +49,7 @@ jobs:
           profile: ${{ matrix.profile }}
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
-          script: |
-            set -e
-            cd apps/android
-            gradle :app:connectedDebugAndroidTest \
-              -Pandroid.testInstrumentationRunnerArguments.class=com.nexvary.andalus.UiReleaseGateTest \
-              --stacktrace --no-daemon
-            cd ../..
-            mkdir -p artifacts/ui/${PROFILE}
-            adb shell am force-stop com.nexvary.andalus
-            adb shell am start -W -n com.nexvary.andalus/.MainActivity
-            sleep 3
-            adb exec-out screencap -p > artifacts/ui/${PROFILE}/home.png
-            adb shell uiautomator dump /sdcard/window.xml || true
-            adb pull /sdcard/window.xml artifacts/ui/${PROFILE}/window.xml || true
-            test -s artifacts/ui/${PROFILE}/home.png
+          script: bash -lc 'set -euo pipefail; gradle -p apps/android :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.nexvary.andalus.UiReleaseGateTest --stacktrace --no-daemon; mkdir -p artifacts/ui/${PROFILE}; adb shell am force-stop com.nexvary.andalus; adb shell am start -W -n com.nexvary.andalus/.MainActivity; sleep 3; adb exec-out screencap -p > artifacts/ui/${PROFILE}/home.png; adb shell uiautomator dump /sdcard/window.xml || true; adb pull /sdcard/window.xml artifacts/ui/${PROFILE}/window.xml || true; test -s artifacts/ui/${PROFILE}/home.png'
       - name: Upload UI evidence
         if: always()
         uses: actions/upload-artifact@v4
