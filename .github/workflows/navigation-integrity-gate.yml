@@ -36,6 +36,9 @@ jobs:
           gradle-version: "9.6.0"
       - name: Install Android SDK
         run: sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+      - name: Route, link and localization unit gate
+        working-directory: apps/android
+        run: gradle :app:testDebugUnitTest --stacktrace --no-daemon
       - name: Navigation Integrity Gate on Android 15
         uses: ReactiveCircus/android-emulator-runner@v2
         with:
@@ -55,6 +58,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: navigation-integrity-reports
-          path: apps/android/app/build/reports/androidTests/
+          path: |
+            apps/android/app/build/reports/tests/
+            apps/android/app/build/reports/androidTests/
           if-no-files-found: warn
           retention-days: 14
