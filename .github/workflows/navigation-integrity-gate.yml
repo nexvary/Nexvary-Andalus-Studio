@@ -39,6 +39,12 @@ jobs:
       - name: Route, link and localization unit gate
         working-directory: apps/android
         run: gradle :app:testDebugUnitTest --stacktrace --no-daemon
+      - name: Enable KVM acceleration
+        run: |
+          if [ -e /dev/kvm ]; then
+            sudo chmod 666 /dev/kvm
+            ls -l /dev/kvm
+          fi
       - name: Navigation Integrity Gate on Android 15
         uses: ReactiveCircus/android-emulator-runner@v2
         with:
