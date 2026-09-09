@@ -1,0 +1,60 @@
+name: Navigation Integrity Gate
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "apps/android/**"
+      - ".github/workflows/navigation-integrity-gate.yml"
+  push:
+    branches: [main]
+    paths:
+      - "apps/android/**"
+      - ".github/workflows/navigation-integrity-gate.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: navigation-integrity-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  navigation-integrity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "9.6.0"
+      - name: Install Android SDK
+        run: sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+      - name: Navigation Integrity Gate on Android 15
+        uses: ReactiveCircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          profile: pixel_7
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          script: |
+            cd apps/android
+            gradle :app:connectedDebugAndroidTest \
+              -Pandroid.testInstrumentationRunnerArguments.class=com.nexvary.andalus.NavigationIntegrityGateTest \
+              --stacktrace --no-daemon
+      - name: Upload navigation test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: navigation-integrity-reports
+          path: apps/android/app/build/reports/androidTests/
+          if-no-files-found: warn
+          retention-days: 14
