@@ -40,8 +40,8 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
-    implementation("io.github.sceneview:sceneview:4.33.0")
-    implementation("io.github.sceneview:arsceneview:4.33.0")
+    implementation("io.github.sceneview:sceneview:4.34.0")
+    implementation("io.github.sceneview:arsceneview:4.34.0")
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.3.0")
