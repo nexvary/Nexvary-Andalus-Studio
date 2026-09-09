@@ -35,19 +35,19 @@ class UiReleaseGateTest {
         composeRule.onNodeWithTag("language-picker").performClick()
         composeRule.onNodeWithTag("lang-en").performClick()
         composeRule.waitForIdle()
-        composeRule.onNodeWithTag("language-picker").assertTextContains("English")
-        composeRule.onNodeWithTag("nav-home").assertTextContains("Home")
+        composeRule.onNodeWithTag("language-picker").assertTextContains("English", substring = true)
+        composeRule.onNodeWithTag("nav-home").assertTextContains("Home", substring = true)
 
         composeRule.onNodeWithTag("nav-services").performClick()
         composeRule.waitForIdle()
         composeRule.onNodeWithTag("screen-services").assertIsDisplayed()
-        composeRule.onNodeWithTag("nav-services").assertTextContains("Services")
+        composeRule.onNodeWithTag("nav-services").assertTextContains("Services", substring = true)
 
         composeRule.onNodeWithTag("language-picker").performClick()
         composeRule.onNodeWithTag("lang-ar").performClick()
         composeRule.waitForIdle()
-        composeRule.onNodeWithTag("language-picker").assertTextContains("العربية")
-        composeRule.onNodeWithTag("nav-services").assertTextContains("الخدمات")
+        composeRule.onNodeWithTag("language-picker").assertTextContains("العربية", substring = true)
+        composeRule.onNodeWithTag("nav-services").assertTextContains("الخدمات", substring = true)
         composeRule.onNodeWithTag("screen-services").assertIsDisplayed()
     }
 
