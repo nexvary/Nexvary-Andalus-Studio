@@ -74,6 +74,10 @@ jobs:
           test -s "${TEST_APK}"
 
           adb wait-for-device
+          # Host launcher ANRs are emulator noise, not application failures. Suppress their
+          # dialogs, then independently prove our app owns the foreground before evidence capture.
+          adb shell settings put global hide_error_dialogs 1 || true
+          adb shell settings put secure anr_show_background 0 || true
           adb install -r "${APP_APK}"
           adb install -r -t "${TEST_APK}"
 
@@ -97,15 +101,40 @@ jobs:
             fi
           }
 
+          ensure_app_foreground() {
+            local focus=""
+            for attempt in 1 2 3; do
+              adb shell am start -W -n com.nexvary.andalus/.MainActivity >/tmp/andalus-start.txt
+              sleep 1
+              focus="$(adb shell dumpsys window | grep -m1 'mCurrentFocus' || true)"
+              echo "Foreground check ${attempt}: ${focus}"
+              if printf '%s' "${focus}" | grep -Fq "com.nexvary.andalus"; then
+                return 0
+              fi
+              # Dismiss an emulator/system dialog only when our activity does not own focus.
+              adb shell input keyevent KEYCODE_BACK || true
+              sleep 1
+            done
+            echo "Nexvary Andalus Studio did not obtain foreground focus"
+            return 1
+          }
+
           capture_ui() {
             local folder="$1"
+            local png="artifacts/release-integrity/${folder}/home.png"
+            local xml="artifacts/release-integrity/${folder}/window.xml"
+
             adb shell am force-stop com.nexvary.andalus
-            adb shell am start -W -n com.nexvary.andalus/.MainActivity
-            sleep 1
-            adb exec-out screencap -p > "artifacts/release-integrity/${folder}/home.png"
+            ensure_app_foreground
+            adb exec-out screencap -p > "${png}"
             adb shell uiautomator dump /sdcard/window.xml || true
-            adb pull /sdcard/window.xml "artifacts/release-integrity/${folder}/window.xml" || true
-            test -s "artifacts/release-integrity/${folder}/home.png"
+            adb pull /sdcard/window.xml "${xml}" || true
+            test -s "${png}"
+
+            if test -s "${xml}" && grep -Eiq "Pixel Launcher|isn't responding|is not responding|Application Error" "${xml}"; then
+              echo "System error dialog contaminated UI evidence for ${folder}"
+              exit 1
+            fi
           }
 
           # Navigation Integrity Gate: every service route, in-page Back, system Back,
