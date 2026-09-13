@@ -40,7 +40,14 @@ class NavigationIntegrityGateTest {
         composeRule.onNodeWithTag("nav-home").performClick()
         composeRule.onNodeWithTag("screen-home").assertIsDisplayed()
 
-        composeRule.onNodeWithTag("home-start-services").performClick()
+        // The Royal home screen intentionally has a tall hero and quick actions.
+        // Scroll to the primary CTA before clicking instead of assuming the compact
+        // pre-overhaul layout where it was always above the fold.
+        composeRule.onNodeWithTag("home-start-services")
+            .performScrollTo()
+            .assertIsDisplayed()
+            .performClick()
+        composeRule.waitForIdle()
         composeRule.onNodeWithTag("screen-services").assertIsDisplayed()
     }
 
