@@ -6,7 +6,7 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 
-private const val RoyalSystemBarColor = 0xFFFFFBF5.toInt()
+private val RoyalSystemBarColor = 0xFFFFFBF5.toInt()
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
