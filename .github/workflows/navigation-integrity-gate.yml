@@ -74,10 +74,11 @@ jobs:
           test -s "${TEST_APK}"
 
           adb wait-for-device
-          # Host launcher ANRs are emulator noise, not application failures. Suppress their
-          # dialogs, then independently prove our app owns the foreground before evidence capture.
+          # Host launcher ANRs are emulator noise, not application failures. Suppress dialogs
+          # where possible; capture code below also force-stops the launcher before evidence.
           adb shell settings put global hide_error_dialogs 1 || true
-          adb shell settings put secure anr_show_background 0 || true
+          adb shell settings put global anr_show_background 0 || true
+          adb shell settings put global show_first_crash_dialog 0 || true
           adb install -r "${APP_APK}"
           adb install -r -t "${TEST_APK}"
 
@@ -101,18 +102,32 @@ jobs:
             fi
           }
 
+          clear_launcher_anr() {
+            # Resizing the headless Pixel 7 can occasionally ANR NexusLauncher after tests.
+            # It is unrelated to the app under test, but its system dialog can cover screenshots.
+            adb shell am force-stop com.google.android.apps.nexuslauncher || true
+            adb shell input keyevent KEYCODE_BACK || true
+            adb shell cmd statusbar collapse || true
+            sleep 1
+          }
+
           ensure_app_foreground() {
             local focus=""
-            for attempt in 1 2 3; do
-              adb shell am start -W -n com.nexvary.andalus/.MainActivity >/tmp/andalus-start.txt
-              sleep 1
+            for attempt in 1 2 3 4 5; do
+              clear_launcher_anr
+              adb shell am force-stop com.nexvary.andalus || true
+              adb shell am start -S -W -n com.nexvary.andalus/.MainActivity >/tmp/andalus-start.txt
+              sleep 2
               focus="$(adb shell dumpsys window | grep -m1 'mCurrentFocus' || true)"
               echo "Foreground check ${attempt}: ${focus}"
               if printf '%s' "${focus}" | grep -Fq "com.nexvary.andalus"; then
                 return 0
               fi
-              # Dismiss an emulator/system dialog only when our activity does not own focus.
-              adb shell input keyevent KEYCODE_BACK || true
+              if printf '%s' "${focus}" | grep -Eiq "nexuslauncher|Application Not Responding"; then
+                clear_launcher_anr
+              else
+                adb shell input keyevent KEYCODE_BACK || true
+              fi
               sleep 1
             done
             echo "Nexvary Andalus Studio did not obtain foreground focus"
@@ -124,7 +139,6 @@ jobs:
             local png="artifacts/release-integrity/${folder}/home.png"
             local xml="artifacts/release-integrity/${folder}/window.xml"
 
-            adb shell am force-stop com.nexvary.andalus
             ensure_app_foreground
             adb exec-out screencap -p > "${png}"
             adb shell uiautomator dump /sdcard/window.xml || true
@@ -175,7 +189,7 @@ jobs:
 
       - name: Capture logcat on failure
         if: failure()
-        run: adb logcat -d > artifacts/release-integrity/logcat.txt || true
+        run: timeout 20s adb logcat -d > artifacts/release-integrity/logcat.txt || true
 
       - name: Upload release integrity evidence
         if: always()
