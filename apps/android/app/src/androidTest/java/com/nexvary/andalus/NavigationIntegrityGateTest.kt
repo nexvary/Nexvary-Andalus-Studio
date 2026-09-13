@@ -45,6 +45,19 @@ class NavigationIntegrityGateTest {
     }
 
     @Test
+    fun royalMenuAndSettingsAreLiveAndReturnHome() {
+        composeRule.onNodeWithTag("screen-home").assertIsDisplayed()
+        composeRule.onNodeWithTag("menu-button").assertIsDisplayed().performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("drawer-settings").assertIsDisplayed().performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("screen-settings").assertIsDisplayed()
+        composeRule.onNodeWithTag("settings-back").assertIsDisplayed().performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("screen-home").assertIsDisplayed()
+    }
+
+    @Test
     fun systemBackFromEveryFeatureReturnsToServicesInsteadOfDeadEnding() {
         composeRule.onNodeWithTag("nav-services").performClick()
         composeRule.onNodeWithTag("screen-services").assertIsDisplayed()
@@ -61,9 +74,6 @@ class NavigationIntegrityGateTest {
     }
 
     private fun openServiceAt(index: Int, route: String) {
-        // LazyColumn only composes visible children. Scroll the list itself to the
-        // service index first, then interact with the now-composed route card.
-        // Index 0 is the Services heading, therefore service rows start at 1.
         composeRule.onNodeWithTag("screen-services").performScrollToIndex(index + 1)
         composeRule.waitForIdle()
         composeRule.onNodeWithTag("service-$route").assertIsDisplayed().performClick()
