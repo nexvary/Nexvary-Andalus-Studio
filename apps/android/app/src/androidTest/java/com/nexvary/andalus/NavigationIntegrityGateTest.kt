@@ -40,8 +40,28 @@ class NavigationIntegrityGateTest {
         composeRule.onNodeWithTag("nav-home").performClick()
         composeRule.onNodeWithTag("screen-home").assertIsDisplayed()
 
-        composeRule.onNodeWithTag("home-start-services").performClick()
+        // The Royal home screen intentionally has a tall hero and quick actions.
+        // Scroll to the primary CTA before clicking instead of assuming the compact
+        // pre-overhaul layout where it was always above the fold.
+        composeRule.onNodeWithTag("home-start-services")
+            .performScrollTo()
+            .assertIsDisplayed()
+            .performClick()
+        composeRule.waitForIdle()
         composeRule.onNodeWithTag("screen-services").assertIsDisplayed()
+    }
+
+    @Test
+    fun royalMenuAndSettingsAreLiveAndReturnHome() {
+        composeRule.onNodeWithTag("screen-home").assertIsDisplayed()
+        composeRule.onNodeWithTag("menu-button").assertIsDisplayed().performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("drawer-settings").assertIsDisplayed().performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("screen-settings").assertIsDisplayed()
+        composeRule.onNodeWithTag("settings-back").assertIsDisplayed().performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("screen-home").assertIsDisplayed()
     }
 
     @Test
@@ -61,9 +81,6 @@ class NavigationIntegrityGateTest {
     }
 
     private fun openServiceAt(index: Int, route: String) {
-        // LazyColumn only composes visible children. Scroll the list itself to the
-        // service index first, then interact with the now-composed route card.
-        // Index 0 is the Services heading, therefore service rows start at 1.
         composeRule.onNodeWithTag("screen-services").performScrollToIndex(index + 1)
         composeRule.waitForIdle()
         composeRule.onNodeWithTag("service-$route").assertIsDisplayed().performClick()
