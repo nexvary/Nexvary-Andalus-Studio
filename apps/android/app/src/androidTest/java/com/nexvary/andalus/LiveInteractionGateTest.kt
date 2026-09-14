@@ -20,7 +20,7 @@ class LiveInteractionGateTest {
 
     @Test
     fun projectCreationChangesVisibleProjectList() {
-        openService("projects")
+        openFirstServiceFromHome("projects")
         composeRule.onNodeWithTag("project-name").performTextInput("بيت أندلسي")
         composeRule.onNodeWithTag("project-create").performClick()
         composeRule.waitForIdle()
@@ -29,7 +29,7 @@ class LiveInteractionGateTest {
 
     @Test
     fun planEditorActuallyChangesWallCount() {
-        openService("plan")
+        openFirstServiceFromHome("plan")
         composeRule.onNodeWithTag("plan-wall-count").assertTextContains("4", substring = true)
         composeRule.onNodeWithTag("plan-add-wall").performClick()
         composeRule.waitForIdle()
@@ -38,27 +38,27 @@ class LiveInteractionGateTest {
 
     @Test
     fun scenePatternMaterialsAndExportControlsAreLive() {
-        openService("3d")
+        openFirstServiceFromHome("3d")
         composeRule.onNodeWithTag("scene-state").assertTextContains("0°", substring = true)
         composeRule.onNodeWithTag("scene-rotate").performClick()
         composeRule.waitForIdle()
         composeRule.onNodeWithTag("scene-state").assertTextContains("15°", substring = true)
         backToServices()
 
-        openService("patterns")
+        openServiceFromServices("patterns")
         composeRule.onNodeWithTag("pattern-1").performClick()
         composeRule.waitForIdle()
         composeRule.onNodeWithTag("pattern-selected").assertTextContains("ذهبي", substring = true)
         backToServices()
 
-        openService("materials")
+        openServiceFromServices("materials")
         composeRule.onNodeWithTag("material-marble-value").assertTextContains("10")
         composeRule.onNodeWithTag("material-marble-plus").performClick()
         composeRule.waitForIdle()
         composeRule.onNodeWithTag("material-marble-value").assertTextContains("11")
         backToServices()
 
-        openService("exports")
+        openServiceFromServices("exports")
         composeRule.onNodeWithTag("export-png").performClick()
         composeRule.onNodeWithTag("export-format").assertTextContains("PNG", substring = true)
         composeRule.onNodeWithTag("export-run").performClick()
@@ -77,8 +77,9 @@ class LiveInteractionGateTest {
         composeRule.onNodeWithTag("palette-sapphire").assertIsDisplayed()
         composeRule.onNodeWithTag("settings-back").performScrollTo().performClick()
         composeRule.waitForIdle()
+        composeRule.onNodeWithTag("screen-home").assertIsDisplayed()
 
-        openService("ar")
+        openFirstServiceFromHome("ar")
         composeRule.onNodeWithTag("ar-toggle").performClick()
         composeRule.waitForIdle()
         composeRule.onNodeWithTag("ar-status").assertTextContains("جاهز", substring = true)
@@ -87,11 +88,13 @@ class LiveInteractionGateTest {
         composeRule.onNodeWithTag("ar-scale").assertTextContains("50", substring = true)
     }
 
-    private fun openService(route: String) {
-        if (composeRule.onAllNodes(androidx.compose.ui.test.hasTestTag("screen-services")).fetchSemanticsNodes().isEmpty()) {
-            composeRule.onNodeWithTag("nav-services").performClick()
-            composeRule.waitForIdle()
-        }
+    private fun openFirstServiceFromHome(route: String) {
+        composeRule.onNodeWithTag("nav-services").performClick()
+        composeRule.waitForIdle()
+        openServiceFromServices(route)
+    }
+
+    private fun openServiceFromServices(route: String) {
         val index = StudioRoutes.serviceIds.indexOf(route)
         composeRule.onNodeWithTag("screen-services").performScrollToIndex(index + 1)
         composeRule.waitForIdle()
