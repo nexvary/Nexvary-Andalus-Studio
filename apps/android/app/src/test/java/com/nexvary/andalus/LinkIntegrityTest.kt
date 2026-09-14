@@ -10,21 +10,33 @@ import org.junit.Test
 class LinkIntegrityTest {
     @Test
     fun publicLinksUseExpectedSecureSchemesAndHosts() {
-        val httpsLinks = listOf(
-            NexvaryLinks.WEBSITE,
-            NexvaryLinks.FACEBOOK,
-            NexvaryLinks.YOUTUBE,
-            NexvaryLinks.X,
+        val expectedHosts = mapOf(
+            NexvaryLinks.WEBSITE to "nexvary.com",
+            NexvaryLinks.FACEBOOK to "www.facebook.com",
+            NexvaryLinks.YOUTUBE to "www.youtube.com",
+            NexvaryLinks.X to "x.com",
         )
-        httpsLinks.forEach { value ->
+
+        expectedHosts.forEach { (value, expectedHost) ->
             val uri = URI(value)
             assertEquals("https", uri.scheme)
             assertNotNull(uri.host)
+            assertEquals(expectedHost, uri.host)
             assertFalse(value.any(Char::isWhitespace))
         }
+
         val mail = URI(NexvaryLinks.EMAIL)
         assertEquals("mailto", mail.scheme)
         assertTrue(mail.schemeSpecificPart.contains("info@nexvary.com"))
+    }
+
+    @Test
+    fun publicDestinationsRemainExactlyTheApprovedNexvaryLinks() {
+        assertEquals("https://nexvary.com/", NexvaryLinks.WEBSITE)
+        assertEquals("https://www.facebook.com/share/14p9krEn5ij/", NexvaryLinks.FACEBOOK)
+        assertEquals("mailto:info@nexvary.com", NexvaryLinks.EMAIL)
+        assertEquals("https://www.youtube.com/@NexvaryInc", NexvaryLinks.YOUTUBE)
+        assertEquals("https://x.com/Nexvary", NexvaryLinks.X)
     }
 
     @Test
