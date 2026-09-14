@@ -32,6 +32,8 @@ jobs:
           distribution: temurin
           java-version: "17"
       - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "9.6.0"
@@ -199,7 +201,9 @@ jobs:
 
       - name: Capture logcat on failure
         if: failure()
-        run: timeout 20s adb logcat -d > artifacts/release-integrity/logcat.txt || true
+        run: |
+          mkdir -p artifacts/release-integrity
+          timeout 20s adb logcat -d > artifacts/release-integrity/logcat.txt || true
 
       - name: Upload release integrity evidence
         if: always()
