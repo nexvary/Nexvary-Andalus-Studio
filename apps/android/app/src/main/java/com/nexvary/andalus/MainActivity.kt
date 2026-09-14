@@ -12,9 +12,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Royal UI uses a light cream surface behind the Android system bars.
-        // Force dark status/navigation icons so time, signal and battery remain
-        // readable on both the emulator evidence and real devices.
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.light(
                 scrim = RoyalSystemBarColor,
@@ -27,9 +24,7 @@ class MainActivity : ComponentActivity() {
         )
 
         setContent {
-            RoyalAndalusTheme {
-                RoyalStudioApp()
-            }
+            AndalusStudioAppV2()
         }
     }
 }
