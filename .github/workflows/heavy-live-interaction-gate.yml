@@ -1,0 +1,124 @@
+name: Heavy Live Interaction Gate
+
+on:
+  push:
+    branches: [fix/live-design-interactions]
+    paths:
+      - "apps/android/**"
+      - ".github/workflows/heavy-live-interaction-gate.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: heavy-live-interaction-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  heavy-build-and-emulator:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "9.6.0"
+
+      - name: Install Android SDK
+        run: sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+
+      - name: Heavy preflight - build once
+        working-directory: apps/android
+        run: >-
+          gradle
+          :app:testDebugUnitTest
+          :app:lintDebug
+          :app:assembleDebug
+          :app:assembleDebugAndroidTest
+          --stacktrace
+          --no-daemon
+
+      - name: Enable KVM
+        run: |
+          test -e /dev/kvm
+          sudo chmod 666 /dev/kvm
+          ls -l /dev/kvm
+
+      - name: Prepare heavy gate runner
+        run: |
+          cat > /tmp/run-heavy-live-gate.sh <<'EOF'
+          #!/usr/bin/env bash
+          set -euo pipefail
+          cd "${GITHUB_WORKSPACE}"
+          mkdir -p artifacts/heavy-live
+
+          APP_APK="apps/android/app/build/outputs/apk/debug/app-debug.apk"
+          TEST_APK="$(find apps/android/app/build/outputs/apk/androidTest/debug -name '*androidTest.apk' -print -quit)"
+          test -s "${APP_APK}"
+          test -s "${TEST_APK}"
+
+          adb wait-for-device
+          adb install -r "${APP_APK}"
+          adb install -r -t "${TEST_APK}"
+          RUNNER="com.nexvary.andalus.test/androidx.test.runner.AndroidJUnitRunner"
+
+          run_gate() {
+            class_name="$1"
+            label="$2"
+            out="artifacts/heavy-live/${label}.txt"
+            set +e
+            adb shell am instrument -w -r -e class "${class_name}" "${RUNNER}" | tee "${out}"
+            status=${PIPESTATUS[0]}
+            set -e
+            test "${status}" -eq 0
+            grep -Fq "OK (" "${out}"
+            ! grep -Eq "FAILURES!!!|INSTRUMENTATION_FAILED|Process crashed|shortMsg=Process crashed" "${out}"
+          }
+
+          run_gate "com.nexvary.andalus.NavigationIntegrityGateTest" "navigation"
+          # UiReleaseGateTest now includes live 2D, 3D, project and export interaction assertions.
+          run_gate "com.nexvary.andalus.UiReleaseGateTest" "ui-and-live-interactions"
+
+          adb shell am force-stop com.nexvary.andalus || true
+          adb shell am start -S -W -n com.nexvary.andalus/.MainActivity
+          sleep 2
+          adb exec-out screencap -p > artifacts/heavy-live/home.png
+          test -s artifacts/heavy-live/home.png
+          EOF
+          chmod +x /tmp/run-heavy-live-gate.sh
+
+      - name: Heavy Android 15 interaction gate
+        uses: ReactiveCircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          profile: pixel_7
+          cores: 2
+          disable-animations: true
+          emulator-boot-timeout: 180
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          script: /tmp/run-heavy-live-gate.sh
+
+      - name: Capture logcat on failure
+        if: failure()
+        run: adb logcat -d > artifacts/heavy-live/logcat.txt || true
+
+      - name: Upload heavy gate evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: heavy-live-interaction-evidence
+          path: |
+            artifacts/heavy-live/
+            apps/android/app/build/outputs/apk/debug/app-debug.apk
+            apps/android/app/build/reports/tests/
+            apps/android/app/build/reports/lint-results-debug.html
+          if-no-files-found: warn
+          retention-days: 14

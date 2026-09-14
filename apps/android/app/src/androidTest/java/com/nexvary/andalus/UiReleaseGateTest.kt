@@ -7,6 +7,7 @@ import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToIndex
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -79,7 +80,6 @@ class UiReleaseGateTest {
         composeRule.onNodeWithTag("palette-emerald").assertIsDisplayed()
         composeRule.onNodeWithTag("theme-current").assertTextContains("Emerald Andalus", substring = true)
 
-        // Restore the approved reference palette so screenshots and following tests are deterministic.
         composeRule.onNodeWithTag("theme-rose").performScrollTo().performClick()
         composeRule.waitForIdle()
         composeRule.onNodeWithTag("palette-rose").assertIsDisplayed()
@@ -94,6 +94,58 @@ class UiReleaseGateTest {
         composeRule.waitForIdle()
         composeRule.onNodeWithTag("screen-projects").assertIsDisplayed()
         composeRule.onNodeWithTag("workspace-projects").assertIsDisplayed()
+    }
+
+    @Test
+    fun planDesignerControlsMutateTheVisibleDesign() {
+        composeRule.onNodeWithTag("nav-services").performClick()
+        composeRule.onNodeWithTag("screen-services").performScrollToIndex(3)
+        composeRule.onNodeWithTag("service-plan").assertIsDisplayed().performClick()
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithTag("screen-plan").assertIsDisplayed()
+        composeRule.onNodeWithTag("plan-canvas").assertIsDisplayed()
+        composeRule.onNodeWithTag("plan-rooms-count").assertTextContains("2", substring = true)
+        composeRule.onNodeWithTag("plan-add-room").performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("plan-rooms-count").assertTextContains("3", substring = true)
+        composeRule.onNodeWithTag("plan-add-arch").performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("plan-arches-count").assertTextContains("2", substring = true)
+    }
+
+    @Test
+    fun threeDStudioControlsMutateSceneState() {
+        composeRule.onNodeWithTag("nav-services").performClick()
+        composeRule.onNodeWithTag("screen-services").performScrollToIndex(4)
+        composeRule.onNodeWithTag("service-3d").assertIsDisplayed().performClick()
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithTag("screen-3d").assertIsDisplayed()
+        composeRule.onNodeWithTag("3d-canvas").assertIsDisplayed()
+        composeRule.onNodeWithTag("3d-angle").assertTextContains("30", substring = true)
+        composeRule.onNodeWithTag("3d-rotate").performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("3d-angle").assertTextContains("45", substring = true)
+    }
+
+    @Test
+    fun projectAndExportActionsAreNotDeadControls() {
+        composeRule.onNodeWithTag("nav-services").performClick()
+        composeRule.onNodeWithTag("service-projects").performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("projects-count").assertTextContains("1", substring = true)
+        composeRule.onNodeWithTag("projects-create").performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("projects-count").assertTextContains("2", substring = true)
+
+        composeRule.onNodeWithTag("back-button").performClick()
+        composeRule.onNodeWithTag("screen-services").performScrollToIndex(8)
+        composeRule.onNodeWithTag("service-exports").performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("exports-generate").performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("exports-status").assertTextContains("#1", substring = true)
     }
 
     private fun overlaps(a: Rect, b: Rect): Boolean {
