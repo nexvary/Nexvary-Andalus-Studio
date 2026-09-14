@@ -61,6 +61,41 @@ class UiReleaseGateTest {
             }
     }
 
+    @Test
+    fun colorIdentitySelectorChangesTheWholeAppTheme() {
+        composeRule.onNodeWithTag("menu-button").performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("drawer-settings").performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("screen-settings").assertIsDisplayed()
+
+        composeRule.onNodeWithTag("theme-sapphire").performScrollTo().performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("palette-sapphire").assertIsDisplayed()
+        composeRule.onNodeWithTag("theme-current").assertTextContains("Sapphire Gold", substring = true)
+
+        composeRule.onNodeWithTag("theme-emerald").performScrollTo().performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("palette-emerald").assertIsDisplayed()
+        composeRule.onNodeWithTag("theme-current").assertTextContains("Emerald Andalus", substring = true)
+
+        // Restore the approved reference palette so screenshots and following tests are deterministic.
+        composeRule.onNodeWithTag("theme-rose").performScrollTo().performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("palette-rose").assertIsDisplayed()
+    }
+
+    @Test
+    fun servicePagesShowWorkspaceInsteadOfQaPlaceholder() {
+        composeRule.onNodeWithTag("nav-services").performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("screen-services").assertIsDisplayed()
+        composeRule.onNodeWithTag("service-projects").assertIsDisplayed().performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("screen-projects").assertIsDisplayed()
+        composeRule.onNodeWithTag("workspace-projects").assertIsDisplayed()
+    }
+
     private fun overlaps(a: Rect, b: Rect): Boolean {
         return a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top
     }
