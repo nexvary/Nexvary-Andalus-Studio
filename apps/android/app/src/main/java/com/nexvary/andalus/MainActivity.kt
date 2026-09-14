@@ -24,7 +24,7 @@ class MainActivity : ComponentActivity() {
         )
 
         setContent {
-            AndalusStudioAppV2()
+            InteractiveAndalusStudioApp()
         }
     }
 }
