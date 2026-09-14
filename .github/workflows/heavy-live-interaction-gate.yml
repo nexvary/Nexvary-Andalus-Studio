@@ -82,8 +82,8 @@ jobs:
           }
 
           run_gate "com.nexvary.andalus.NavigationIntegrityGateTest" "navigation"
-          run_gate "com.nexvary.andalus.UiReleaseGateTest" "ui-release"
-          run_gate "com.nexvary.andalus.LiveInteractionGateTest" "live-interactions"
+          # UiReleaseGateTest now includes live 2D, 3D, project and export interaction assertions.
+          run_gate "com.nexvary.andalus.UiReleaseGateTest" "ui-and-live-interactions"
 
           adb shell am force-stop com.nexvary.andalus || true
           adb shell am start -S -W -n com.nexvary.andalus/.MainActivity
