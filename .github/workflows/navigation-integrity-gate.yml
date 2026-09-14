@@ -50,6 +50,24 @@ jobs:
           --stacktrace
           --no-daemon
 
+      - name: External link reachability gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          urls=(
+            "https://nexvary.com/"
+            "https://www.facebook.com/share/14p9krEn5ij/"
+            "https://www.youtube.com/@NexvaryInc"
+            "https://x.com/Nexvary"
+          )
+          for url in "${urls[@]}"; do
+            code="$(curl -L -sS --retry 2 --retry-delay 1 --connect-timeout 10 --max-time 30 \
+              -A 'Mozilla/5.0 Nexvary-Link-Integrity-Gate/1.0' \
+              -o /dev/null -w '%{http_code}' "$url")"
+            echo "$url -> HTTP $code"
+            test "$code" != "000"
+          done
+
       - name: Enable KVM acceleration
         run: |
           test -e /dev/kvm
@@ -74,8 +92,6 @@ jobs:
           test -s "${TEST_APK}"
 
           adb wait-for-device
-          # Host launcher ANRs are emulator noise, not application failures. Suppress dialogs
-          # where possible; capture code below also force-stops the launcher before evidence.
           adb shell settings put global hide_error_dialogs 1 || true
           adb shell settings put global anr_show_background 0 || true
           adb shell settings put global show_first_crash_dialog 0 || true
@@ -103,8 +119,6 @@ jobs:
           }
 
           clear_launcher_anr() {
-            # Resizing the headless Pixel 7 can occasionally ANR NexusLauncher after tests.
-            # It is unrelated to the app under test, but its system dialog can cover screenshots.
             adb shell am force-stop com.google.android.apps.nexuslauncher || true
             adb shell input keyevent KEYCODE_BACK || true
             adb shell cmd statusbar collapse || true
@@ -151,18 +165,14 @@ jobs:
             fi
           }
 
-          # Navigation Integrity Gate: every service route, in-page Back, system Back,
-          # primary tabs, About and all internal destinations.
           run_gate "com.nexvary.andalus.NavigationIntegrityGateTest" "navigation-integrity"
 
-          # UI Release Gate on a compact phone viewport.
           adb shell wm size 1080x1920
           adb shell wm density 420
           sleep 1
           run_gate "com.nexvary.andalus.UiReleaseGateTest" "ui-small-phone"
           capture_ui "small-phone"
 
-          # UI Release Gate on a modern tall phone viewport.
           adb shell wm size 1080x2400
           adb shell wm density 420
           sleep 1
