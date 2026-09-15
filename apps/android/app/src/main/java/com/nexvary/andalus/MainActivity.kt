@@ -6,7 +6,7 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 
-private val RoyalSystemBarColor = 0xFFFFFBF5.toInt()
+private val RoyalSystemBarColor = 0xFFFFEDF2.toInt()
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -24,7 +24,7 @@ class MainActivity : ComponentActivity() {
         )
 
         setContent {
-            InteractiveAndalusStudioApp()
+            RoyalAndalusStudioV3()
         }
     }
 }
