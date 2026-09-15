@@ -1,4 +1,4 @@
-name: Navigation Integrity Gate
+name: Android Unified Release Gate
 
 on:
   pull_request:
@@ -16,32 +16,41 @@ on:
 
 permissions:
   contents: read
+  id-token: write
+  attestations: write
 
 concurrency:
-  group: navigation-integrity-${{ github.event.pull_request.number || github.ref }}
+  group: android-unified-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
-  navigation-and-ui-release:
+  build-test-visual-release:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v5
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "17"
-      - uses: android-actions/setup-android@v3
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
         with:
           packages: platform-tools
-      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Set up Gradle 9.6
+        uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "9.6.0"
 
       - name: Install Android SDK
         run: sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
 
-      - name: Fast release preflight
+      - name: Build once + unit + lint + instrumentation APK
         working-directory: apps/android
         run: >-
           gradle
@@ -50,9 +59,20 @@ jobs:
           :app:assembleDebug
           :app:assembleDebugAndroidTest
           --stacktrace
-          --no-daemon
+
+      - name: Collect APK and checksum
+        run: |
+          set -euo pipefail
+          test -s apps/android/app/build/outputs/apk/debug/app-debug.apk
+          mkdir -p artifacts/release-integrity/instrumentation
+          mkdir -p artifacts/release-integrity/small-phone
+          mkdir -p artifacts/release-integrity/modern-phone
+          mkdir -p artifacts/release-bundle
+          cp apps/android/app/build/outputs/apk/debug/app-debug.apk artifacts/release-bundle/Nexvary-Andalus-Studio-v0.8.25-debug.apk
+          sha256sum artifacts/release-bundle/Nexvary-Andalus-Studio-v0.8.25-debug.apk > artifacts/release-bundle/Nexvary-Andalus-Studio-v0.8.25-debug.apk.sha256
 
       - name: External link reachability gate
+        if: github.event_name != 'pull_request'
         shell: bash
         run: |
           set -euo pipefail
@@ -63,7 +83,7 @@ jobs:
             "https://x.com/Nexvary"
           )
           for url in "${urls[@]}"; do
-            code="$(curl -L -sS --retry 2 --retry-delay 1 --connect-timeout 10 --max-time 30 \
+            code="$(curl -L -sS --retry 1 --connect-timeout 6 --max-time 15 \
               -A 'Mozilla/5.0 Nexvary-Link-Integrity-Gate/1.0' \
               -o /dev/null -w '%{http_code}' "$url")"
             echo "$url -> HTTP $code"
@@ -74,18 +94,13 @@ jobs:
         run: |
           test -e /dev/kvm
           sudo chmod 666 /dev/kvm
-          ls -l /dev/kvm
 
-      - name: Prepare deterministic Android gate runner
+      - name: Prepare unified Android 15 runner
         run: |
           cat > /tmp/run-release-integrity.sh <<'EOF'
           #!/usr/bin/env bash
           set -euo pipefail
           cd "${GITHUB_WORKSPACE}"
-
-          mkdir -p artifacts/release-integrity/instrumentation
-          mkdir -p artifacts/release-integrity/small-phone
-          mkdir -p artifacts/release-integrity/modern-phone
 
           APP_APK="apps/android/app/build/outputs/apk/debug/app-debug.apk"
           TEST_APK="$(find apps/android/app/build/outputs/apk/androidTest/debug -name '*androidTest.apk' -print -quit)"
@@ -106,16 +121,13 @@ jobs:
             local class_name="$1"
             local label="$2"
             local output="artifacts/release-integrity/instrumentation/${label}.txt"
-
             set +e
             adb shell am instrument -w -r -e class "${class_name}" "${RUNNER}" | tee "${output}"
             local adb_status=${PIPESTATUS[0]}
             set -e
-
             test "${adb_status}" -eq 0
             grep -Fq "OK (" "${output}"
             if grep -Eq "FAILURES!!!|INSTRUMENTATION_FAILED|Process crashed|shortMsg=Process crashed" "${output}"; then
-              echo "Instrumentation gate ${label} failed"
               exit 1
             fi
           }
@@ -124,29 +136,21 @@ jobs:
             adb shell am force-stop com.google.android.apps.nexuslauncher || true
             adb shell input keyevent KEYCODE_BACK || true
             adb shell cmd statusbar collapse || true
-            sleep 1
           }
 
           ensure_app_foreground() {
             local focus=""
-            for attempt in 1 2 3 4 5; do
+            for attempt in 1 2 3 4; do
               clear_launcher_anr
               adb shell am force-stop com.nexvary.andalus || true
               adb shell am start -S -W -n com.nexvary.andalus/.MainActivity >/tmp/andalus-start.txt
-              sleep 2
+              sleep 1
               focus="$(adb shell dumpsys window | grep -m1 'mCurrentFocus' || true)"
-              echo "Foreground check ${attempt}: ${focus}"
               if printf '%s' "${focus}" | grep -Fq "com.nexvary.andalus"; then
                 return 0
               fi
-              if printf '%s' "${focus}" | grep -Eiq "nexuslauncher|Application Not Responding"; then
-                clear_launcher_anr
-              else
-                adb shell input keyevent KEYCODE_BACK || true
-              fi
-              sleep 1
+              adb shell input keyevent KEYCODE_BACK || true
             done
-            echo "Nexvary Andalus Studio did not obtain foreground focus"
             return 1
           }
 
@@ -154,15 +158,12 @@ jobs:
             local folder="$1"
             local png="artifacts/release-integrity/${folder}/home.png"
             local xml="artifacts/release-integrity/${folder}/window.xml"
-
             ensure_app_foreground
             adb exec-out screencap -p > "${png}"
             adb shell uiautomator dump /sdcard/window.xml || true
             adb pull /sdcard/window.xml "${xml}" || true
             test -s "${png}"
-
             if test -s "${xml}" && grep -Eiq "Pixel Launcher|isn't responding|is not responding|Application Error" "${xml}"; then
-              echo "System error dialog contaminated UI evidence for ${folder}"
               exit 1
             fi
           }
@@ -171,13 +172,11 @@ jobs:
 
           adb shell wm size 1080x1920
           adb shell wm density 420
-          sleep 1
           run_gate "com.nexvary.andalus.UiReleaseGateTest" "ui-small-phone"
           capture_ui "small-phone"
 
           adb shell wm size 1080x2400
           adb shell wm density 420
-          sleep 1
           run_gate "com.nexvary.andalus.UiReleaseGateTest" "ui-modern-phone"
           capture_ui "modern-phone"
 
@@ -186,7 +185,7 @@ jobs:
           EOF
           chmod +x /tmp/run-release-integrity.sh
 
-      - name: Navigation Integrity Gate + UI Release Gate on Android 15
+      - name: Navigation + UI gates on one Android 15 emulator
         uses: ReactiveCircus/android-emulator-runner@v2
         with:
           api-level: 35
@@ -199,18 +198,33 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
           script: /tmp/run-release-integrity.sh
 
+      - name: Copy Android 15 evidence into release bundle
+        if: success()
+        run: |
+          mkdir -p artifacts/release-bundle/android15
+          cp artifacts/release-integrity/modern-phone/home.png artifacts/release-bundle/android15/home.png
+          if test -f artifacts/release-integrity/modern-phone/window.xml; then
+            cp artifacts/release-integrity/modern-phone/window.xml artifacts/release-bundle/android15/window.xml
+          fi
+
+      - name: Attest APK build provenance
+        if: success() && github.event_name != 'pull_request'
+        uses: actions/attest@v4
+        with:
+          subject-path: artifacts/release-bundle/Nexvary-Andalus-Studio-v0.8.25-debug.apk
+
       - name: Capture logcat on failure
         if: failure()
         run: |
-          mkdir -p artifacts/release-integrity
-          timeout 20s adb logcat -d > artifacts/release-integrity/logcat.txt || true
+          timeout 15s adb logcat -d > artifacts/release-integrity/logcat.txt || true
 
-      - name: Upload release integrity evidence
+      - name: Upload unified APK + Android 15 evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: android-release-integrity-evidence
+          name: Nexvary-Andalus-Studio-v0.8.25-release-evidence
           path: |
+            artifacts/release-bundle/
             artifacts/release-integrity/
             apps/android/app/build/reports/tests/
             apps/android/app/build/reports/lint-results-debug.html
