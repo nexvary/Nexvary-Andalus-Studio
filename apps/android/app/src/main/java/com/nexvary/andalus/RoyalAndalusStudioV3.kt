@@ -119,7 +119,7 @@ private val RoyalRose = V3Palette(
     gold = Color(0xFFD4AF37),
     goldDark = Color(0xFF9C7417),
     royal = Color(0xFF183A78),
-    royalDark = Color(0xFF0A2250),
+    royalDark = Color(0xFF071A46),
     ivory = Color(0xFFFFFBF3),
     ink = Color(0xFF2C2430),
     muted = Color(0xFF735E68),
@@ -132,7 +132,7 @@ private val RoyalSapphire = RoyalRose.copy(
     roseSoft = Color(0xFFF9F0FB),
     roseDeep = Color(0xFFB89ABD),
     royal = Color(0xFF153C87),
-    royalDark = Color(0xFF09265C),
+    royalDark = Color(0xFF061B4A),
 )
 
 private val RoyalEmerald = RoyalRose.copy(
@@ -151,22 +151,8 @@ private val LocalV3Palette = staticCompositionLocalOf { RoyalRose }
 private val RoyalArch = GenericShape { size, _ ->
     moveTo(0f, size.height)
     lineTo(0f, size.height * 0.46f)
-    cubicTo(
-        size.width * 0.03f,
-        size.height * 0.17f,
-        size.width * 0.28f,
-        0f,
-        size.width * 0.5f,
-        0f,
-    )
-    cubicTo(
-        size.width * 0.72f,
-        0f,
-        size.width * 0.97f,
-        size.height * 0.17f,
-        size.width,
-        size.height * 0.46f,
-    )
+    cubicTo(size.width * 0.03f, size.height * 0.17f, size.width * 0.28f, 0f, size.width * 0.5f, 0f)
+    cubicTo(size.width * 0.72f, 0f, size.width * 0.97f, size.height * 0.17f, size.width, size.height * 0.46f)
     lineTo(size.width, size.height)
     close()
 }
@@ -175,9 +161,7 @@ private val RoyalArch = GenericShape { size, _ ->
 fun RoyalAndalusStudioV3() {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences(V3_PREFS, Context.MODE_PRIVATE) }
-    var paletteId by rememberSaveable {
-        mutableStateOf(prefs.getString(V3_PALETTE, RoyalRose.id) ?: RoyalRose.id)
-    }
+    var paletteId by rememberSaveable { mutableStateOf(prefs.getString(V3_PALETTE, RoyalRose.id) ?: RoyalRose.id) }
     val palette = V3Palettes.firstOrNull { it.id == paletteId } ?: RoyalRose
 
     CompositionLocalProvider(LocalV3Palette provides palette) {
@@ -274,21 +258,18 @@ private fun AndalusBackdrop(content: @Composable () -> Unit) {
     Box(
         Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    listOf(c.roseSoft, c.rose.copy(alpha = 0.82f), c.roseSoft),
-                ),
-            ),
+            .background(Brush.verticalGradient(listOf(c.roseSoft, c.rose.copy(alpha = 0.78f), c.roseSoft))),
     ) {
         Canvas(Modifier.fillMaxSize()) {
-            val step = 150f
-            var y = 75f
+            val step = 140f
+            var y = 70f
             while (y < size.height) {
-                var x = 55f
+                var x = 50f
                 while (x < size.width) {
-                    drawCircle(c.gold.copy(alpha = 0.075f), radius = 14f, center = Offset(x, y), style = Stroke(width = 2f))
-                    drawLine(c.royal.copy(alpha = 0.045f), Offset(x - 18f, y), Offset(x + 18f, y), strokeWidth = 2f)
-                    drawLine(c.royal.copy(alpha = 0.045f), Offset(x, y - 18f), Offset(x, y + 18f), strokeWidth = 2f)
+                    drawCircle(c.gold.copy(alpha = 0.10f), radius = 16f, center = Offset(x, y), style = Stroke(width = 2f))
+                    drawCircle(c.royal.copy(alpha = 0.045f), radius = 7f, center = Offset(x, y), style = Stroke(width = 2f))
+                    drawLine(c.gold.copy(alpha = 0.075f), Offset(x - 20f, y), Offset(x + 20f, y), strokeWidth = 2f)
+                    drawLine(c.gold.copy(alpha = 0.075f), Offset(x, y - 20f), Offset(x, y + 20f), strokeWidth = 2f)
                     x += step
                 }
                 y += step
@@ -302,24 +283,24 @@ private fun AndalusBackdrop(content: @Composable () -> Unit) {
 private fun V3TopBar(language: AppLanguage, ui: UiCopy, onMenu: () -> Unit, onLanguage: (AppLanguage) -> Unit) {
     val c = LocalV3Palette.current
     var expanded by remember { mutableStateOf(false) }
-    Surface(color = c.roseSoft.copy(alpha = 0.98f), shadowElevation = 7.dp) {
+    Surface(color = c.royalDark, shadowElevation = 9.dp) {
         Column(Modifier.safeDrawingPadding()) {
             Row(
-                Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 5.dp),
+                Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 7.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 IconButton(onClick = onMenu, modifier = Modifier.testTag("menu-button")) {
-                    Icon(Icons.Outlined.Menu, contentDescription = "Menu", tint = c.royalDark)
+                    Icon(Icons.Outlined.Menu, contentDescription = "Menu", tint = c.gold)
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("NEXVARY", color = c.goldDark, fontWeight = FontWeight.Black)
-                    Text("ANDALUS STUDIO", color = c.royalDark, fontWeight = FontWeight.ExtraBold)
+                    Text("NEXVARY", color = c.gold, fontWeight = FontWeight.Black)
+                    Text("ANDALUS STUDIO", color = c.ivory, fontWeight = FontWeight.ExtraBold)
                 }
                 Box {
                     TextButton(onClick = { expanded = true }, modifier = Modifier.testTag("language-picker")) {
-                        Icon(Icons.Outlined.Language, contentDescription = ui.language, tint = c.goldDark)
-                        Text(" ${language.nativeName}", color = c.royalDark)
+                        Icon(Icons.Outlined.Language, contentDescription = ui.language, tint = c.gold)
+                        Text(" ${language.nativeName}", color = c.ivory)
                     }
                     DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                         AppLanguage.entries.forEach { item ->
@@ -335,7 +316,7 @@ private fun V3TopBar(language: AppLanguage, ui: UiCopy, onMenu: () -> Unit, onLa
                     }
                 }
             }
-            Box(Modifier.fillMaxWidth().height(2.dp).background(Brush.horizontalGradient(listOf(Color.Transparent, c.gold, c.goldDark, c.gold, Color.Transparent))))
+            Box(Modifier.fillMaxWidth().height(3.dp).background(Brush.horizontalGradient(listOf(Color.Transparent, c.gold, c.goldDark, c.gold, Color.Transparent))))
         }
     }
 }
@@ -345,9 +326,9 @@ private fun V3Drawer(destination: String, ui: UiCopy, navigate: (String) -> Unit
     val c = LocalV3Palette.current
     ModalDrawerSheet(drawerContainerColor = c.roseSoft, modifier = Modifier.widthIn(max = 332.dp)) {
         Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
-            Surface(shape = RoyalArch, color = c.royalDark, modifier = Modifier.fillMaxWidth().height(150.dp).border(1.dp, c.gold, RoyalArch)) {
-                Column(Modifier.padding(18.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                    Text("✦ ❈ ✦", color = c.gold)
+            Surface(shape = RoyalArch, color = c.royalDark, modifier = Modifier.fillMaxWidth().height(190.dp).border(2.dp, c.gold, RoyalArch)) {
+                Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                    TughraInspiredMark(Modifier.width(160.dp).height(90.dp))
                     Text("NEXVARY", color = c.gold, fontWeight = FontWeight.Black)
                     Text("Andalus Studio", color = c.ivory, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
                 }
@@ -357,8 +338,8 @@ private fun V3Drawer(destination: String, ui: UiCopy, navigate: (String) -> Unit
             V3DrawerRow(ui.services, destination == StudioRoutes.SERVICES, "drawer-services", Icons.Outlined.Build) { navigate(StudioRoutes.SERVICES) }
             V3DrawerRow(ui.about, destination == StudioRoutes.ABOUT, "drawer-about", Icons.Outlined.Info) { navigate(StudioRoutes.ABOUT) }
             V3DrawerRow(if (LocalLayoutDirection.current == LayoutDirection.Rtl) "الإعدادات" else "Settings", destination == V3_SETTINGS, "drawer-settings", Icons.Outlined.Settings) { navigate(V3_SETTINGS) }
-            HorizontalDivider(color = c.gold.copy(alpha = 0.55f), modifier = Modifier.padding(vertical = 8.dp))
-            Text("Royal Andalus Design System • V3", color = c.muted, style = MaterialTheme.typography.labelSmall)
+            HorizontalDivider(color = c.gold.copy(alpha = 0.65f), modifier = Modifier.padding(vertical = 8.dp))
+            Text("Royal Andalus Design System • Tughra Edition", color = c.muted, style = MaterialTheme.typography.labelSmall)
         }
     }
 }
@@ -378,10 +359,28 @@ private fun V3DrawerRow(label: String, selected: Boolean, tag: String, icon: Ima
 @Composable
 private fun V3BottomBar(destination: String, ui: UiCopy, navigate: (String) -> Unit) {
     val c = LocalV3Palette.current
-    NavigationBar(containerColor = c.roseSoft) {
-        NavigationBarItem(selected = destination == StudioRoutes.HOME, onClick = { navigate(StudioRoutes.HOME) }, icon = { Icon(Icons.Outlined.Home, ui.home) }, label = { Text(ui.home) }, modifier = Modifier.testTag("nav-home"))
-        NavigationBarItem(selected = destination == StudioRoutes.SERVICES, onClick = { navigate(StudioRoutes.SERVICES) }, icon = { Icon(Icons.Outlined.Build, ui.services) }, label = { Text(ui.services) }, modifier = Modifier.testTag("nav-services"))
-        NavigationBarItem(selected = destination == StudioRoutes.ABOUT, onClick = { navigate(StudioRoutes.ABOUT) }, icon = { Icon(Icons.Outlined.Info, ui.about) }, label = { Text(ui.about) }, modifier = Modifier.testTag("nav-about"))
+    NavigationBar(containerColor = c.royalDark) {
+        NavigationBarItem(
+            selected = destination == StudioRoutes.HOME,
+            onClick = { navigate(StudioRoutes.HOME) },
+            icon = { Icon(Icons.Outlined.Home, ui.home, tint = if (destination == StudioRoutes.HOME) c.gold else c.ivory) },
+            label = { Text(ui.home, color = if (destination == StudioRoutes.HOME) c.gold else c.ivory) },
+            modifier = Modifier.testTag("nav-home"),
+        )
+        NavigationBarItem(
+            selected = destination == StudioRoutes.SERVICES,
+            onClick = { navigate(StudioRoutes.SERVICES) },
+            icon = { Icon(Icons.Outlined.Build, ui.services, tint = if (destination == StudioRoutes.SERVICES) c.gold else c.ivory) },
+            label = { Text(ui.services, color = if (destination == StudioRoutes.SERVICES) c.gold else c.ivory) },
+            modifier = Modifier.testTag("nav-services"),
+        )
+        NavigationBarItem(
+            selected = destination == StudioRoutes.ABOUT,
+            onClick = { navigate(StudioRoutes.ABOUT) },
+            icon = { Icon(Icons.Outlined.Info, ui.about, tint = if (destination == StudioRoutes.ABOUT) c.gold else c.ivory) },
+            label = { Text(ui.about, color = if (destination == StudioRoutes.ABOUT) c.gold else c.ivory) },
+            modifier = Modifier.testTag("nav-about"),
+        )
     }
 }
 
@@ -396,30 +395,36 @@ private fun V3Home(padding: PaddingValues, language: AppLanguage, ui: UiCopy, st
         ) {
             Column(Modifier.fillMaxWidth().widthIn(max = 780.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 Surface(
-                    modifier = Modifier.fillMaxWidth().height(290.dp).border(2.dp, c.gold, RoyalArch),
+                    modifier = Modifier.fillMaxWidth().height(360.dp).border(2.dp, c.gold, RoyalArch),
                     shape = RoyalArch,
                     color = c.royalDark,
-                    shadowElevation = 12.dp,
+                    shadowElevation = 14.dp,
                 ) {
-                    Box(Modifier.background(Brush.verticalGradient(listOf(c.royal, c.royalDark)))) {
+                    Box(Modifier.background(Brush.verticalGradient(listOf(c.royal, c.royalDark, Color(0xFF030D2D))))) {
                         Canvas(Modifier.fillMaxSize()) {
-                            val center = Offset(size.width / 2f, size.height * 0.27f)
-                            repeat(8) { i ->
-                                val a = (Math.PI * 2 * i / 8).toFloat()
-                                val p = Offset(center.x + cos(a) * 50f, center.y + sin(a) * 50f)
-                                drawCircle(c.gold.copy(alpha = 0.3f), 11f, p, style = Stroke(width = 3f))
+                            val center = Offset(size.width / 2f, size.height * 0.36f)
+                            repeat(16) { i ->
+                                val a = (Math.PI * 2 * i / 16).toFloat()
+                                val p = Offset(center.x + cos(a) * 118f, center.y + sin(a) * 118f)
+                                drawCircle(c.gold.copy(alpha = 0.17f), 9f, p, style = Stroke(width = 2.5f))
                             }
-                            drawCircle(c.gold.copy(alpha = 0.32f), 28f, center, style = Stroke(width = 4f))
+                            val inset = 22f
+                            drawRect(
+                                color = c.gold.copy(alpha = 0.34f),
+                                topLeft = Offset(inset, size.height * 0.44f),
+                                size = androidx.compose.ui.geometry.Size(size.width - inset * 2, size.height * 0.47f),
+                                style = Stroke(width = 2f),
+                            )
                         }
-                        Column(Modifier.fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                            Text("✦  ❈  ✦", color = c.gold, style = MaterialTheme.typography.headlineSmall)
-                            Spacer(Modifier.height(12.dp))
+                        Column(Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 22.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                            TughraInspiredMark(Modifier.width(210.dp).height(125.dp))
+                            Spacer(Modifier.height(6.dp))
                             Text("Nexvary Andalus Studio", color = c.ivory, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black, textAlign = TextAlign.Center)
                             Spacer(Modifier.height(8.dp))
                             Text(ui.tagline, color = c.roseSoft, textAlign = TextAlign.Center, fontWeight = FontWeight.SemiBold)
                             Spacer(Modifier.height(14.dp))
-                            Surface(color = c.gold.copy(alpha = 0.16f), shape = RoundedCornerShape(50.dp), modifier = Modifier.border(1.dp, c.gold, RoundedCornerShape(50.dp))) {
-                                Text(if (language.rtl) "استوديو تصميم أندلسي متكامل" else "Complete Andalusian Design Studio", color = c.gold, modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp), fontWeight = FontWeight.Bold)
+                            Surface(color = c.gold.copy(alpha = 0.13f), shape = RoundedCornerShape(50.dp), modifier = Modifier.border(1.dp, c.gold, RoundedCornerShape(50.dp))) {
+                                Text(if (language.rtl) "هندسة أندلسية • زخارف • واقع معزز" else "Andalusian Architecture • Ornament • AR", color = c.gold, modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp), fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -428,24 +433,39 @@ private fun V3Home(padding: PaddingValues, language: AppLanguage, ui: UiCopy, st
                 SectionTitle(if (language.rtl) "ابدأ مشروعك" else "Start your project")
                 Text(ui.homeIntro, color = c.muted)
 
-                listOf("projects", "plan", "3d", "patterns").chunked(2).forEach { rowKeys ->
+                listOf("projects", "plan", "patterns", "ar").chunked(2).forEach { rowKeys ->
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         rowKeys.forEach { key ->
                             val copy = services.getValue(key)
                             Card(
                                 onClick = { open(key) },
                                 modifier = Modifier.weight(1f).testTag("quick-$key").border(1.dp, c.gold, RoundedCornerShape(22.dp)),
-                                colors = CardDefaults.cardColors(containerColor = c.ivory.copy(alpha = 0.96f)),
+                                colors = CardDefaults.cardColors(containerColor = c.ivory.copy(alpha = 0.97f)),
                                 shape = RoundedCornerShape(22.dp),
                             ) {
                                 Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
-                                    Surface(color = c.royalDark, shape = RoundedCornerShape(16.dp)) {
-                                        Box(Modifier.size(46.dp), contentAlignment = Alignment.Center) { Icon(v3ServiceIcon(key), null, tint = c.gold) }
+                                    Surface(color = c.royalDark, shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
+                                        Row(Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                                            Icon(v3ServiceIcon(key), null, tint = c.gold)
+                                            Spacer(Modifier.width(8.dp))
+                                            Text(copy.badge, color = c.gold, fontWeight = FontWeight.Black)
+                                        }
                                     }
                                     Text(copy.title, color = c.royalDark, fontWeight = FontWeight.Black)
                                     Text(copy.subtitle, color = c.muted, style = MaterialTheme.typography.bodySmall)
                                 }
                             }
+                        }
+                    }
+                }
+
+                Surface(color = c.royalDark, shape = RoundedCornerShape(22.dp), modifier = Modifier.fillMaxWidth().border(1.dp, c.gold, RoundedCornerShape(22.dp))) {
+                    Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                        TughraInspiredMark(Modifier.width(90.dp).height(60.dp))
+                        Spacer(Modifier.width(10.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(if (language.rtl) "مكتبة زخارف محلية" else "Local Ornament Library", color = c.gold, fontWeight = FontWeight.Black)
+                            Text(if (language.rtl) "2400 زخرفة • 12 عائلة • تعمل دون إنترنت" else "2,400 ornaments • 12 families • offline", color = c.ivory)
                         }
                     }
                 }
@@ -467,7 +487,7 @@ private fun SectionTitle(text: String) {
     val c = LocalV3Palette.current
     Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
         Text(text, color = c.royalDark, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
-        Box(Modifier.width(104.dp).height(3.dp).background(Brush.horizontalGradient(listOf(c.goldDark, c.gold, Color.Transparent))))
+        Box(Modifier.width(126.dp).height(3.dp).background(Brush.horizontalGradient(listOf(c.goldDark, c.gold, Color.Transparent))))
     }
 }
 
@@ -484,13 +504,17 @@ private fun V3Services(padding: PaddingValues, language: AppLanguage, ui: UiCopy
         ) {
             item {
                 Surface(
-                    modifier = Modifier.fillMaxWidth().widthIn(max = 780.dp).border(1.dp, c.gold, RoundedCornerShape(26.dp)),
+                    modifier = Modifier.fillMaxWidth().widthIn(max = 780.dp).border(2.dp, c.gold, RoundedCornerShape(26.dp)),
                     color = c.royalDark,
                     shape = RoundedCornerShape(26.dp),
                 ) {
-                    Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text("✦ ${ui.services} ✦", color = c.gold, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
-                        Text(ui.tagline, color = c.roseSoft)
+                    Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        TughraInspiredMark(Modifier.width(100.dp).height(70.dp))
+                        Spacer(Modifier.width(10.dp))
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                            Text(ui.services, color = c.gold, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
+                            Text(ui.tagline, color = c.roseSoft)
+                        }
                     }
                 }
             }
@@ -499,7 +523,7 @@ private fun V3Services(padding: PaddingValues, language: AppLanguage, ui: UiCopy
                 Card(
                     onClick = { open(key) },
                     modifier = Modifier.fillMaxWidth().widthIn(max = 780.dp).testTag("service-$key").border(1.dp, c.gold, RoundedCornerShape(22.dp)),
-                    colors = CardDefaults.cardColors(containerColor = c.ivory.copy(alpha = 0.97f)),
+                    colors = CardDefaults.cardColors(containerColor = c.ivory.copy(alpha = 0.98f)),
                     shape = RoundedCornerShape(22.dp),
                 ) {
                     Row(Modifier.padding(15.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -544,7 +568,7 @@ private fun V3Feature(key: String, padding: PaddingValues, language: AppLanguage
                     shape = RoundedCornerShape(24.dp),
                 ) {
                     Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Surface(color = c.rose.copy(alpha = 0.18f), shape = RoundedCornerShape(16.dp)) {
+                        Surface(color = c.gold.copy(alpha = 0.15f), shape = RoundedCornerShape(16.dp)) {
                             Box(Modifier.size(50.dp), contentAlignment = Alignment.Center) { Icon(v3ServiceIcon(key), null, tint = c.gold) }
                         }
                         Spacer(Modifier.width(12.dp))
@@ -553,8 +577,8 @@ private fun V3Feature(key: String, padding: PaddingValues, language: AppLanguage
                             Text(copy.badge, color = c.gold, fontWeight = FontWeight.Bold)
                         }
                         OutlinedButton(onClick = back, modifier = Modifier.testTag("back-button")) {
-                            Icon(Icons.AutoMirrored.Outlined.ArrowBack, ui.back)
-                            Text(" ${ui.back}")
+                            Icon(Icons.AutoMirrored.Outlined.ArrowBack, ui.back, tint = c.gold)
+                            Text(" ${ui.back}", color = c.ivory)
                         }
                     }
                 }
@@ -580,6 +604,9 @@ private fun V3Workspace(key: String, language: AppLanguage, copy: ServiceCopy) {
                 "projects" -> V3Projects(language)
                 "plan" -> V3Plan(language)
                 "3d" -> V3Scene(language)
+                "patterns" -> V3PatternStudioPro(language)
+                "assets", "library" -> V3AssetLibraryPro(language)
+                "ar" -> V3ArRoomDesigner(language)
                 "exports" -> V3Export(language)
                 else -> V3GenericTool(language, key)
             }
@@ -707,11 +734,7 @@ private fun V3GenericTool(language: AppLanguage, key: String) {
     var value by rememberSaveable(key) { mutableIntStateOf(0) }
     val (primary, secondary) = when (key) {
         "ai" -> action(language, "توليد تصور", "Generate concept") to action(language, "تثبيت العناصر", "Lock elements")
-        "patterns" -> action(language, "زخرفة جديدة", "New ornament") to action(language, "تدوير النمط", "Rotate pattern")
-        "assets" -> action(language, "إضافة أصل", "Add asset") to action(language, "تصفية المكتبة", "Filter library")
         "materials" -> action(language, "إضافة خامة", "Add material") to action(language, "مقارنة", "Compare")
-        "ar" -> action(language, "بدء المعاينة", "Start preview") to action(language, "تثبيت نقطة", "Pin anchor")
-        "library" -> action(language, "إضافة للمكتبة", "Add to library") to action(language, "بحث", "Search")
         else -> action(language, "تنفيذ", "Run") to action(language, "إعادة", "Reset")
     }
     V3ActionRow(primary, "$key-primary", { value++ }, secondary, "$key-secondary", { value = (value + 1) % 10 })
@@ -726,9 +749,9 @@ private fun V3About(padding: PaddingValues, ui: UiCopy) {
     AndalusBackdrop {
         Column(Modifier.fillMaxSize().testTag("screen-about").padding(padding).verticalScroll(rememberScrollState()).padding(14.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Column(Modifier.fillMaxWidth().widthIn(max = 780.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Surface(shape = RoyalArch, color = c.royalDark, modifier = Modifier.fillMaxWidth().height(220.dp).border(2.dp, c.gold, RoyalArch)) {
-                    Column(Modifier.padding(22.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                        Text("✦ ❈ ✦", color = c.gold)
+                Surface(shape = RoyalArch, color = c.royalDark, modifier = Modifier.fillMaxWidth().height(270.dp).border(2.dp, c.gold, RoyalArch)) {
+                    Column(Modifier.padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                        TughraInspiredMark(Modifier.width(190.dp).height(115.dp))
                         Text(ui.aboutTitle, color = c.ivory, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black, textAlign = TextAlign.Center)
                     }
                 }
