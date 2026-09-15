@@ -6,21 +6,15 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 
-private val RoyalSystemBarColor = 0xFFFFEDF2.toInt()
+private val RoyalSystemBarColor = 0xFF071A46.toInt()
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.light(
-                scrim = RoyalSystemBarColor,
-                darkScrim = RoyalSystemBarColor,
-            ),
-            navigationBarStyle = SystemBarStyle.light(
-                scrim = RoyalSystemBarColor,
-                darkScrim = RoyalSystemBarColor,
-            ),
+            statusBarStyle = SystemBarStyle.dark(RoyalSystemBarColor),
+            navigationBarStyle = SystemBarStyle.dark(RoyalSystemBarColor),
         )
 
         setContent {
