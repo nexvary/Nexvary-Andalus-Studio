@@ -3,8 +3,12 @@ name: Stage 825 Quality Gate
 on:
   push:
     branches: [main, "feature/**"]
+    paths-ignore:
+      - "apps/android/**"
   pull_request:
     branches: [main]
+    paths-ignore:
+      - "apps/android/**"
   workflow_dispatch:
 
 permissions:
@@ -122,4 +126,4 @@ jobs:
           echo "Android static security policy gate: PASS"
       - name: Android build delegation
         run: |
-          echo "Compile, lint, instrumentation and Android 15 runtime checks are delegated to Navigation Integrity Gate and Android APK Visual Release Gate to avoid duplicate Gradle builds."
+          echo "Android-only commits are validated by the unified Android release gate; Stage 825 is reserved for cross-stack changes to avoid duplicate CI work."
