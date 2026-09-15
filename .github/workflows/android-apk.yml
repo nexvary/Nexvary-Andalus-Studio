@@ -61,7 +61,7 @@ jobs:
           subject-path: artifacts/Nexvary-Andalus-Studio-v0.8.25-debug.apk
 
       - name: Upload APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Nexvary-Andalus-Studio-v0.8.25-manual-apk
           path: |
