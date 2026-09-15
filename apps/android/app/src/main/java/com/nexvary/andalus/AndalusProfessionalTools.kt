@@ -45,10 +45,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
@@ -93,7 +96,7 @@ private val ornamentFamilies = listOf(
     Triple("calligraphy", "حليات خطية", "Calligraphic Ornament"),
 )
 
-/** 2,400 deterministic local ornaments: 12 historical families × 200 variants. */
+/** 2,400 deterministic local ornaments: 12 families × 200 variants. */
 internal val LocalOrnamentCatalog: List<OrnamentAsset> by lazy {
     buildList(2400) {
         var id = 1
@@ -113,52 +116,87 @@ internal val LocalOrnamentCatalog: List<OrnamentAsset> by lazy {
     }
 }
 
+internal fun ornamentsForFamily(family: String): List<OrnamentAsset> =
+    if (family == "all") LocalOrnamentCatalog else LocalOrnamentCatalog.filter { it.family == family }
+
+/**
+ * Kept under the old function name so existing callers remain stable, but the mark is now
+ * an explicitly Andalusian horseshoe arch with geometric/floral ornament instead of a tughra-like glyph.
+ */
 @Composable
 internal fun TughraInspiredMark(modifier: Modifier = Modifier) {
     Canvas(modifier) {
-        val gold = ProGold
-        val ivory = ProIvory
-        val blue = Color(0xFF315FC2)
         val w = size.width
         val h = size.height
-        val baseline = h * 0.76f
+        val cx = w / 2f
+        val base = h * 0.88f
+        val left = w * 0.24f
+        val right = w * 0.76f
+        val spring = h * 0.57f
 
-        // Three upright calligraphic stems inspired by the supplied tughra reference.
-        listOf(0.42f, 0.52f, 0.62f).forEachIndexed { i, xRatio ->
-            val x = w * xRatio
-            drawLine(gold, Offset(x, baseline), Offset(x + i * 2f, h * 0.08f), strokeWidth = 7f)
-            drawLine(ivory, Offset(x + 2f, baseline - 3f), Offset(x + 2f + i * 2f, h * 0.11f), strokeWidth = 2.5f)
+        // Horseshoe/Andalusian arch silhouette.
+        val outer = Path().apply {
+            moveTo(left, base)
+            lineTo(left, spring)
+            cubicTo(left, h * 0.24f, w * 0.34f, h * 0.08f, cx, h * 0.08f)
+            cubicTo(w * 0.66f, h * 0.08f, right, h * 0.24f, right, spring)
+            cubicTo(right, h * 0.72f, w * 0.67f, h * 0.78f, w * 0.61f, h * 0.72f)
+            cubicTo(w * 0.70f, h * 0.57f, w * 0.67f, h * 0.28f, cx, h * 0.25f)
+            cubicTo(w * 0.33f, h * 0.28f, w * 0.30f, h * 0.57f, w * 0.39f, h * 0.72f)
+            cubicTo(w * 0.33f, h * 0.78f, left, h * 0.72f, left, spring)
+            lineTo(left, base)
+            close()
         }
+        drawPath(outer, ProGold)
+        drawPath(outer, ProRoyal2, style = Stroke(width = 3f))
 
-        val sweep = Path().apply {
-            moveTo(w * 0.08f, h * 0.58f)
-            cubicTo(w * 0.18f, h * 0.20f, w * 0.48f, h * 0.34f, w * 0.44f, h * 0.60f)
-            cubicTo(w * 0.39f, h * 0.90f, w * 0.13f, h * 0.86f, w * 0.09f, h * 0.64f)
-            cubicTo(w * 0.28f, h * 0.84f, w * 0.48f, h * 0.82f, w * 0.68f, h * 0.72f)
-            cubicTo(w * 0.78f, h * 0.67f, w * 0.87f, h * 0.70f, w * 0.95f, h * 0.66f)
-        }
-        drawPath(sweep, gold, style = Stroke(width = 7f))
-        drawPath(sweep, blue.copy(alpha = 0.75f), style = Stroke(width = 2.2f))
-
+        // Inner ivory/gold arch line.
         val inner = Path().apply {
-            moveTo(w * 0.22f, h * 0.61f)
-            cubicTo(w * 0.33f, h * 0.46f, w * 0.48f, h * 0.51f, w * 0.43f, h * 0.67f)
-            cubicTo(w * 0.37f, h * 0.79f, w * 0.25f, h * 0.76f, w * 0.20f, h * 0.68f)
+            moveTo(w * 0.31f, base)
+            lineTo(w * 0.31f, spring)
+            cubicTo(w * 0.31f, h * 0.34f, w * 0.39f, h * 0.18f, cx, h * 0.18f)
+            cubicTo(w * 0.61f, h * 0.18f, w * 0.69f, h * 0.34f, w * 0.69f, spring)
+            cubicTo(w * 0.69f, h * 0.66f, w * 0.63f, h * 0.70f, w * 0.58f, h * 0.66f)
+            cubicTo(w * 0.64f, h * 0.52f, w * 0.60f, h * 0.33f, cx, h * 0.32f)
+            cubicTo(w * 0.40f, h * 0.33f, w * 0.36f, h * 0.52f, w * 0.42f, h * 0.66f)
+            cubicTo(w * 0.37f, h * 0.70f, w * 0.31f, h * 0.66f, w * 0.31f, spring)
         }
-        drawPath(inner, ivory, style = Stroke(width = 5f))
-        drawPath(inner, gold, style = Stroke(width = 2f))
+        drawPath(inner, ProIvory, style = Stroke(width = 4f))
+        drawPath(inner, ProGoldDeep, style = Stroke(width = 2f))
 
-        // Jewel rosette on the right, mirroring the reference's pendant medallion.
-        val center = Offset(w * 0.82f, h * 0.35f)
-        repeat(12) { i ->
-            val a = (2.0 * PI * i / 12.0).toFloat()
-            val p = Offset(center.x + cos(a) * h * 0.18f, center.y + sin(a) * h * 0.18f)
-            drawCircle(gold, h * 0.045f, p)
-            drawCircle(blue, h * 0.025f, p)
+        // Rosette suspended in the arch.
+        drawRosette(center = Offset(cx, h * 0.42f), radius = h * 0.12f, petals = 12, seed = 3)
+
+        // Floral vines on both sides.
+        fun vine(mirror: Float) {
+            val startX = if (mirror < 0) w * 0.20f else w * 0.80f
+            val endX = if (mirror < 0) w * 0.34f else w * 0.66f
+            val vinePath = Path().apply {
+                moveTo(startX, h * 0.82f)
+                cubicTo(startX + mirror * w * 0.03f, h * 0.68f, endX - mirror * w * 0.08f, h * 0.64f, endX, h * 0.53f)
+            }
+            drawPath(vinePath, ProGold, style = Stroke(width = 4f))
+            listOf(0.62f, 0.72f).forEachIndexed { index, y ->
+                val x = if (mirror < 0) w * (0.25f + index * 0.04f) else w * (0.75f - index * 0.04f)
+                drawCircle(ProGold, h * 0.035f, Offset(x, h * y))
+                drawCircle(ProRoyal2, h * 0.018f, Offset(x, h * y))
+            }
         }
-        drawCircle(gold, h * 0.095f, center)
-        drawCircle(ProRoyal, h * 0.066f, center)
-        drawCircle(ivory, h * 0.018f, center)
+        vine(-1f)
+        vine(1f)
+
+        // Decorated columns.
+        listOf(left, right).forEach { x ->
+            drawRoundRect(
+                ProGold,
+                topLeft = Offset(x - w * 0.035f, h * 0.61f),
+                size = Size(w * 0.07f, h * 0.27f),
+                cornerRadius = CornerRadius(5f, 5f),
+            )
+            repeat(4) { i ->
+                drawCircle(ProRoyal2, h * 0.014f, Offset(x, h * (0.66f + i * 0.055f)))
+            }
+        }
     }
 }
 
@@ -166,9 +204,7 @@ internal fun TughraInspiredMark(modifier: Modifier = Modifier) {
 internal fun V3PatternStudioPro(language: AppLanguage) {
     var family by remember { mutableStateOf("all") }
     var page by remember { mutableStateOf(0) }
-    val filtered = remember(family) {
-        if (family == "all") LocalOrnamentCatalog else LocalOrnamentCatalog.filter { it.family == family }
-    }
+    val filtered = remember(family) { ornamentsForFamily(family) }
     val visible = filtered.drop(page * 12).take(12)
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -180,6 +216,12 @@ internal fun V3PatternStudioPro(language: AppLanguage) {
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier.testTag("ornament-count"),
         )
+        Text(
+            text = familyLabel(language, family),
+            color = ProRoyal,
+            fontWeight = FontWeight.Black,
+            modifier = Modifier.testTag("ornament-selected-family"),
+        )
         FamilyFilter(language, family) {
             family = it
             page = 0
@@ -188,18 +230,22 @@ internal fun V3PatternStudioPro(language: AppLanguage) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 row.forEach { asset ->
                     Card(
-                        modifier = Modifier.weight(1f).border(1.dp, ProGold, RoundedCornerShape(16.dp)).testTag("ornament-${asset.id}"),
+                        modifier = Modifier
+                            .weight(1f)
+                            .border(1.dp, ProGold, RoundedCornerShape(16.dp))
+                            .testTag("ornament-${asset.id}"),
                         colors = CardDefaults.cardColors(containerColor = ProIvory),
                         shape = RoundedCornerShape(16.dp),
                     ) {
                         Column(Modifier.padding(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                            OrnamentPreview(asset, Modifier.fillMaxWidth().height(74.dp))
+                            OrnamentPreview(asset, Modifier.fillMaxWidth().height(78.dp))
                             Text(
                                 if (language.rtl) asset.arName else asset.enName,
                                 color = ProRoyal,
                                 fontWeight = FontWeight.Bold,
                                 textAlign = TextAlign.Center,
                                 maxLines = 2,
+                                modifier = Modifier.testTag("ornament-name-${asset.id}"),
                             )
                         }
                     }
@@ -231,7 +277,9 @@ internal fun V3AssetLibraryPro(language: AppLanguage) {
     val results = remember(query) {
         if (query.isBlank()) LocalOrnamentCatalog.take(24)
         else LocalOrnamentCatalog.filter {
-            it.arName.contains(query, ignoreCase = true) || it.enName.contains(query, ignoreCase = true) || it.family.contains(query, ignoreCase = true)
+            it.arName.contains(query, ignoreCase = true) ||
+                it.enName.contains(query, ignoreCase = true) ||
+                it.family.contains(query, ignoreCase = true)
         }.take(24)
     }
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -249,7 +297,11 @@ internal fun V3AssetLibraryPro(language: AppLanguage) {
                 row.forEach { asset ->
                     Surface(
                         onClick = { selected = asset },
-                        modifier = Modifier.weight(1f).height(92.dp).border(1.dp, if (selected?.id == asset.id) ProRoyal2 else ProGold, RoundedCornerShape(14.dp)),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(92.dp)
+                            .border(1.dp, if (selected?.id == asset.id) ProRoyal2 else ProGold, RoundedCornerShape(14.dp))
+                            .testTag("library-asset-${asset.id}"),
                         color = ProIvory,
                         shape = RoundedCornerShape(14.dp),
                     ) {
@@ -281,6 +333,7 @@ private data class PlacedOrnament(val asset: OrnamentAsset, val x: Float, val y:
 internal fun V3ArRoomDesigner(language: AppLanguage) {
     var roomBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var selected by remember { mutableStateOf(LocalOrnamentCatalog.first()) }
+    var roomFamily by remember { mutableStateOf("all") }
     val placed = remember { mutableStateListOf<PlacedOrnament>() }
 
     val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
@@ -293,8 +346,8 @@ internal fun V3ArRoomDesigner(language: AppLanguage) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         ProSectionTitle(if (language.rtl) "مصمم الغرفة بالسحب والإفلات" else "Room Designer — Drag & Drop")
         Text(
-            if (language.rtl) "صوّر الغرفة، اختر زخرفة من الشريط، ثم أضفها واسحبها فوق الصورة إلى المكان المطلوب."
-            else "Capture the room, choose an ornament, add it, then drag it freely over the photo.",
+            if (language.rtl) "صوّر الغرفة، اختر عائلة زخرفية وعنصرًا، ثم أضفه واسحبه فوق الصورة."
+            else "Capture the room, choose a family and ornament, then place and drag it over the photo.",
             color = ProInk,
         )
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -318,7 +371,12 @@ internal fun V3ArRoomDesigner(language: AppLanguage) {
         }
 
         Box(
-            Modifier.fillMaxWidth().height(360.dp).background(ProRoyal, RoundedCornerShape(22.dp)).border(2.dp, ProGold, RoundedCornerShape(22.dp)).testTag("room-workspace"),
+            Modifier
+                .fillMaxWidth()
+                .height(360.dp)
+                .background(ProRoyal, RoundedCornerShape(22.dp))
+                .border(2.dp, ProGold, RoundedCornerShape(22.dp))
+                .testTag("room-workspace"),
         ) {
             val bitmap = roomBitmap
             if (bitmap != null) {
@@ -330,16 +388,11 @@ internal fun V3ArRoomDesigner(language: AppLanguage) {
                 )
             } else {
                 Canvas(Modifier.fillMaxSize()) {
-                    // Room placeholder keeps the workspace useful even before taking a photo.
                     drawRect(Color(0xFFEEE6DD))
                     drawLine(ProRoyal2, Offset(size.width * 0.12f, size.height * 0.18f), Offset(size.width * 0.12f, size.height * 0.88f), 4f)
                     drawLine(ProRoyal2, Offset(size.width * 0.88f, size.height * 0.18f), Offset(size.width * 0.88f, size.height * 0.88f), 4f)
                     drawLine(ProGoldDeep, Offset(size.width * 0.12f, size.height * 0.88f), Offset(size.width * 0.88f, size.height * 0.88f), 5f)
-                    val arch = Path().apply {
-                        moveTo(size.width * 0.32f, size.height * 0.70f)
-                        quadraticBezierTo(size.width * 0.50f, size.height * 0.34f, size.width * 0.68f, size.height * 0.70f)
-                    }
-                    drawPath(arch, ProGold, style = Stroke(width = 7f))
+                    drawAndalusArch(Offset(size.width * 0.50f, size.height * 0.62f), size.minDimension * 0.22f, 0)
                 }
                 Text(
                     if (language.rtl) "معاينة الغرفة — التقط صورة حقيقية للبدء" else "Room preview — capture a real photo to begin",
@@ -362,10 +415,7 @@ internal fun V3ArRoomDesigner(language: AppLanguage) {
                                 change.consume()
                                 val index = placed.indexOfFirst { it === item }
                                 if (index >= 0) {
-                                    placed[index] = item.copy(
-                                        x = item.x + dragAmount.x,
-                                        y = item.y + dragAmount.y,
-                                    )
+                                    placed[index] = item.copy(x = item.x + dragAmount.x, y = item.y + dragAmount.y)
                                 }
                             }
                         }
@@ -376,15 +426,23 @@ internal fun V3ArRoomDesigner(language: AppLanguage) {
             }
         }
 
+        Text(if (language.rtl) "اختر نوع الزخرفة" else "Choose ornament family", color = ProRoyal, fontWeight = FontWeight.Black)
+        FamilyFilter(language, roomFamily) { family ->
+            roomFamily = family
+            selected = ornamentsForFamily(family).firstOrNull() ?: LocalOrnamentCatalog.first()
+        }
         Text(if (language.rtl) "اسحب الزخرفة داخل الصورة بعد إضافتها" else "Drag any placed ornament directly on the image", color = ProRoyal, fontWeight = FontWeight.Bold)
         Row(
             Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            LocalOrnamentCatalog.take(18).forEach { asset ->
+            ornamentsForFamily(roomFamily).take(18).forEach { asset ->
                 Surface(
                     onClick = { selected = asset },
-                    modifier = Modifier.size(76.dp).border(2.dp, if (selected.id == asset.id) ProRoyal2 else ProGold, RoundedCornerShape(14.dp)),
+                    modifier = Modifier
+                        .size(76.dp)
+                        .border(2.dp, if (selected.id == asset.id) ProRoyal2 else ProGold, RoundedCornerShape(14.dp))
+                        .testTag("room-asset-${asset.id}"),
                     color = ProIvory,
                     shape = RoundedCornerShape(14.dp),
                 ) {
@@ -406,10 +464,7 @@ internal fun V3ArRoomDesigner(language: AppLanguage) {
             colors = ButtonDefaults.buttonColors(containerColor = ProRoyal, contentColor = ProIvory),
             shape = RoundedCornerShape(18.dp),
         ) {
-            Text(
-                if (language.rtl) "أضف: ${selected.arName}" else "Add: ${selected.enName}",
-                fontWeight = FontWeight.Black,
-            )
+            Text(if (language.rtl) "أضف: ${selected.arName}" else "Add: ${selected.enName}", fontWeight = FontWeight.Black)
         }
     }
 }
@@ -422,18 +477,26 @@ private fun FamilyFilter(language: AppLanguage, selected: String, onSelect: (Str
     ) {
         val options = listOf(Triple("all", "الكل", "All")) + ornamentFamilies
         options.forEach { family ->
+            val modifier = Modifier.testTag("ornament-filter-${family.first}")
             if (selected == family.first) {
                 Button(
                     onClick = { onSelect(family.first) },
+                    modifier = modifier,
                     colors = ButtonDefaults.buttonColors(containerColor = ProRoyal, contentColor = ProIvory),
                 ) { Text(if (language.rtl) family.second else family.third) }
             } else {
-                OutlinedButton(onClick = { onSelect(family.first) }) {
+                OutlinedButton(onClick = { onSelect(family.first) }, modifier = modifier) {
                     Text(if (language.rtl) family.second else family.third, color = ProRoyal)
                 }
             }
         }
     }
+}
+
+private fun familyLabel(language: AppLanguage, family: String): String {
+    if (family == "all") return if (language.rtl) "كل العائلات" else "All families"
+    val item = ornamentFamilies.firstOrNull { it.first == family }
+    return if (item == null) family else if (language.rtl) item.second else item.third
 }
 
 @Composable
@@ -446,31 +509,260 @@ private fun ProSectionTitle(text: String) {
 
 @Composable
 private fun OrnamentPreview(asset: OrnamentAsset, modifier: Modifier = Modifier) {
-    Canvas(modifier) {
-        val center = Offset(size.width / 2f, size.height / 2f)
-        val radius = size.minDimension * 0.31f
-        val points = 8 + (asset.seed % 5) * 2
-        val star = Path()
-        repeat(points * 2) { index ->
-            val outer = index % 2 == 0
-            val r = if (outer) radius else radius * (0.42f + (asset.seed % 4) * 0.06f)
-            val angle = (-PI / 2.0 + PI * index / points).toFloat()
-            val x = center.x + cos(angle) * r
-            val y = center.y + sin(angle) * r
-            if (index == 0) star.moveTo(x, y) else star.lineTo(x, y)
-        }
-        star.close()
-
-        drawCircle(ProRose, radius * 1.36f, center)
-        drawCircle(ProGold.copy(alpha = 0.28f), radius * 1.25f, center, style = Stroke(width = 3f))
-        drawPath(star, if (asset.seed % 2 == 0) ProRoyal2 else ProGoldDeep)
-        drawPath(star, ProGold, style = Stroke(width = 3f))
-        drawCircle(ProIvory, radius * 0.26f, center)
-        drawCircle(ProGoldDeep, radius * 0.13f, center)
-        repeat(8) { i ->
-            val a = (2.0 * PI * i / 8.0).toFloat()
-            val p = Offset(center.x + cos(a) * radius * 0.78f, center.y + sin(a) * radius * 0.78f)
-            drawCircle(ProGold, radius * 0.07f, p)
+    Canvas(modifier.testTag("ornament-preview-${asset.id}")) {
+        drawRoundRect(
+            color = ProRose.copy(alpha = 0.55f),
+            topLeft = Offset.Zero,
+            size = size,
+            cornerRadius = CornerRadius(size.minDimension * 0.13f),
+        )
+        when (asset.family) {
+            "zellige" -> drawZellige(asset.seed)
+            "girih" -> drawGirih(asset.seed)
+            "rosette" -> drawRosette(Offset(size.width / 2f, size.height / 2f), size.minDimension * 0.30f, 10 + asset.seed % 4, asset.seed)
+            "star" -> drawStarOrnament(asset.seed)
+            "arabesque" -> drawArabesque(asset.seed)
+            "muqarnas" -> drawMuqarnas(asset.seed)
+            "arch" -> drawAndalusArch(Offset(size.width / 2f, size.height * 0.56f), size.minDimension * 0.34f, asset.seed)
+            "border" -> drawBorderBand(asset.seed)
+            "mashrabiya" -> drawMashrabiya(asset.seed)
+            "mosaic" -> drawMosaic(asset.seed)
+            "ceiling" -> drawCeiling(asset.seed)
+            "calligraphy" -> drawCalligraphicFlourish(asset.seed)
+            else -> drawStarOrnament(asset.seed)
         }
     }
+}
+
+private fun DrawScope.drawStarOrnament(seed: Int) {
+    val center = Offset(size.width / 2f, size.height / 2f)
+    val radius = size.minDimension * 0.31f
+    val points = 8 + (seed % 5) * 2
+    val path = starPath(center, radius, points, 0.44f + (seed % 3) * 0.08f)
+    drawPath(path, if (seed % 2 == 0) ProRoyal2 else ProGoldDeep)
+    drawPath(path, ProGold, style = Stroke(width = 3f))
+    drawCircle(ProIvory, radius * 0.22f, center)
+    drawCircle(ProGoldDeep, radius * 0.10f, center)
+}
+
+private fun DrawScope.drawZellige(seed: Int) {
+    val cell = size.minDimension / 4.2f
+    repeat(4) { row ->
+        repeat(5) { col ->
+            val cx = col * cell + cell * 0.45f + if (row % 2 == 0) 0f else cell * 0.5f
+            val cy = row * cell + cell * 0.45f
+            val p = Path().apply {
+                moveTo(cx, cy - cell * 0.38f)
+                lineTo(cx + cell * 0.38f, cy)
+                lineTo(cx, cy + cell * 0.38f)
+                lineTo(cx - cell * 0.38f, cy)
+                close()
+            }
+            drawPath(p, if ((row + col + seed) % 2 == 0) ProRoyal2 else ProIvory)
+            drawPath(p, ProGold, style = Stroke(width = 2f))
+        }
+    }
+}
+
+private fun DrawScope.drawGirih(seed: Int) {
+    val center = Offset(size.width / 2f, size.height / 2f)
+    val r1 = size.minDimension * 0.34f
+    val r2 = r1 * 0.58f
+    val outer = regularPolygon(center, r1, 10, -PI / 2)
+    val inner = regularPolygon(center, r2, 5, -PI / 2 + (seed % 5) * 0.08)
+    drawPath(outer, ProIvory)
+    drawPath(outer, ProGoldDeep, style = Stroke(width = 3f))
+    drawPath(inner, ProRoyal2, style = Stroke(width = 4f))
+    repeat(5) { i ->
+        val a = (-PI / 2 + 2 * PI * i / 5).toFloat()
+        val p1 = Offset(center.x + cos(a) * r2, center.y + sin(a) * r2)
+        val p2 = Offset(center.x + cos(a + PI.toFloat()) * r1, center.y + sin(a + PI.toFloat()) * r1)
+        drawLine(ProGold, p1, p2, 2f)
+    }
+}
+
+private fun DrawScope.drawRosette(center: Offset, radius: Float, petals: Int, seed: Int) {
+    repeat(petals) { i ->
+        val a = (2.0 * PI * i / petals).toFloat()
+        val petalCenter = Offset(center.x + cos(a) * radius * 0.62f, center.y + sin(a) * radius * 0.62f)
+        drawCircle(if ((i + seed) % 2 == 0) ProGold else ProRoyal2, radius * 0.30f, petalCenter)
+        drawCircle(ProIvory, radius * 0.18f, petalCenter)
+    }
+    drawCircle(ProGoldDeep, radius * 0.36f, center)
+    drawCircle(ProIvory, radius * 0.21f, center)
+    drawCircle(ProRoyal2, radius * 0.10f, center)
+}
+
+private fun DrawScope.drawArabesque(seed: Int) {
+    val baseY = size.height * 0.73f
+    val vine = Path().apply {
+        moveTo(size.width * 0.08f, baseY)
+        cubicTo(size.width * 0.22f, size.height * 0.28f, size.width * 0.43f, size.height * 0.83f, size.width * 0.52f, size.height * 0.42f)
+        cubicTo(size.width * 0.60f, size.height * 0.10f, size.width * 0.79f, size.height * 0.48f, size.width * 0.92f, size.height * 0.23f)
+    }
+    drawPath(vine, ProGoldDeep, style = Stroke(width = 5f))
+    repeat(5) { i ->
+        val x = size.width * (0.20f + i * 0.15f)
+        val y = size.height * (if ((i + seed) % 2 == 0) 0.48f else 0.58f)
+        drawCircle(ProGold, size.minDimension * 0.085f, Offset(x, y))
+        drawCircle(ProRoyal2, size.minDimension * 0.048f, Offset(x, y))
+        val leaf = Path().apply {
+            moveTo(x, y)
+            quadraticBezierTo(x + size.width * 0.08f, y - size.height * 0.09f, x + size.width * 0.11f, y + size.height * 0.02f)
+            quadraticBezierTo(x + size.width * 0.05f, y + size.height * 0.06f, x, y)
+        }
+        drawPath(leaf, ProRoyal2)
+        drawPath(leaf, ProGold, style = Stroke(width = 2f))
+    }
+}
+
+private fun DrawScope.drawMuqarnas(seed: Int) {
+    val rows = 4
+    val top = size.height * 0.12f
+    val rowH = size.height * 0.17f
+    repeat(rows) { row ->
+        val cells = row + 3
+        val cellW = size.width * 0.82f / cells
+        val startX = size.width * 0.09f
+        repeat(cells) { col ->
+            val x = startX + col * cellW
+            val y = top + row * rowH
+            val p = Path().apply {
+                moveTo(x, y)
+                lineTo(x + cellW, y)
+                lineTo(x + cellW * 0.74f, y + rowH * 0.72f)
+                lineTo(x + cellW * 0.50f, y + rowH)
+                lineTo(x + cellW * 0.26f, y + rowH * 0.72f)
+                close()
+            }
+            drawPath(p, if ((row + col + seed) % 2 == 0) ProGold else ProRoyal2)
+            drawPath(p, ProIvory, style = Stroke(width = 2f))
+        }
+    }
+}
+
+private fun DrawScope.drawAndalusArch(center: Offset, radius: Float, seed: Int) {
+    val left = center.x - radius * 0.62f
+    val right = center.x + radius * 0.62f
+    val baseY = center.y + radius * 0.88f
+    val springY = center.y + radius * 0.12f
+    val arch = Path().apply {
+        moveTo(left, baseY)
+        lineTo(left, springY)
+        cubicTo(left, center.y - radius * 0.70f, center.x - radius * 0.36f, center.y - radius, center.x, center.y - radius)
+        cubicTo(center.x + radius * 0.36f, center.y - radius, right, center.y - radius * 0.70f, right, springY)
+        cubicTo(right, center.y + radius * 0.46f, center.x + radius * 0.36f, center.y + radius * 0.50f, center.x + radius * 0.28f, center.y + radius * 0.36f)
+        cubicTo(center.x + radius * 0.44f, center.y + radius * 0.02f, center.x + radius * 0.30f, center.y - radius * 0.45f, center.x, center.y - radius * 0.49f)
+        cubicTo(center.x - radius * 0.30f, center.y - radius * 0.45f, center.x - radius * 0.44f, center.y + radius * 0.02f, center.x - radius * 0.28f, center.y + radius * 0.36f)
+        cubicTo(center.x - radius * 0.36f, center.y + radius * 0.50f, left, center.y + radius * 0.46f, left, springY)
+        close()
+    }
+    drawPath(arch, if (seed % 2 == 0) ProGold else ProGoldDeep)
+    drawPath(arch, ProRoyal2, style = Stroke(width = 3f))
+    drawRosette(Offset(center.x, center.y - radius * 0.17f), radius * 0.22f, 8 + seed % 5, seed)
+}
+
+private fun DrawScope.drawBorderBand(seed: Int) {
+    val top = size.height * 0.30f
+    val bottom = size.height * 0.70f
+    drawRoundRect(ProRoyal2, Offset(size.width * 0.04f, top), Size(size.width * 0.92f, bottom - top), CornerRadius(10f))
+    drawRoundRect(ProGold, Offset(size.width * 0.04f, top), Size(size.width * 0.92f, bottom - top), CornerRadius(10f), style = Stroke(width = 3f))
+    repeat(7) { i ->
+        val x = size.width * (0.11f + i * 0.13f)
+        val p = starPath(Offset(x, size.height * 0.5f), size.minDimension * 0.095f, 6 + seed % 3, 0.48f)
+        drawPath(p, ProIvory)
+        drawPath(p, ProGold, style = Stroke(width = 1.8f))
+    }
+}
+
+private fun DrawScope.drawMashrabiya(seed: Int) {
+    val step = size.minDimension * (0.20f + (seed % 3) * 0.02f)
+    var y = step * 0.45f
+    var row = 0
+    while (y < size.height) {
+        var x = step * 0.45f + if (row % 2 == 0) 0f else step * 0.5f
+        while (x < size.width) {
+            val diamond = Path().apply {
+                moveTo(x, y - step * 0.32f)
+                lineTo(x + step * 0.32f, y)
+                lineTo(x, y + step * 0.32f)
+                lineTo(x - step * 0.32f, y)
+                close()
+            }
+            drawPath(diamond, ProRoyal2, style = Stroke(width = 3f))
+            drawCircle(ProGold, step * 0.075f, Offset(x, y))
+            x += step
+        }
+        y += step
+        row++
+    }
+}
+
+private fun DrawScope.drawMosaic(seed: Int) {
+    val step = size.minDimension * 0.23f
+    repeat(5) { row ->
+        repeat(6) { col ->
+            val x = col * step + if (row % 2 == 0) 0f else step * 0.5f
+            val y = row * step * 0.82f
+            val center = Offset(x, y)
+            drawCircle(if ((row + col + seed) % 3 == 0) ProGold else ProRoyal2, step * 0.31f, center)
+            drawCircle(ProIvory, step * 0.16f, center)
+        }
+    }
+}
+
+private fun DrawScope.drawCeiling(seed: Int) {
+    val center = Offset(size.width / 2f, size.height / 2f)
+    val outer = size.minDimension * 0.37f
+    repeat(3) { ring ->
+        val r = outer * (1f - ring * 0.24f)
+        val petals = 12 - ring * 2 + seed % 2
+        val p = starPath(center, r, petals, 0.68f)
+        drawPath(p, if (ring % 2 == 0) ProGold else ProRoyal2, style = Stroke(width = if (ring == 0) 4f else 3f))
+    }
+    drawRosette(center, outer * 0.37f, 10 + seed % 4, seed)
+}
+
+private fun DrawScope.drawCalligraphicFlourish(seed: Int) {
+    val p1 = Path().apply {
+        moveTo(size.width * 0.09f, size.height * 0.67f)
+        cubicTo(size.width * 0.20f, size.height * 0.22f, size.width * 0.47f, size.height * 0.29f, size.width * 0.44f, size.height * 0.61f)
+        cubicTo(size.width * 0.41f, size.height * 0.85f, size.width * 0.18f, size.height * 0.84f, size.width * 0.16f, size.height * 0.62f)
+        cubicTo(size.width * 0.37f, size.height * 0.79f, size.width * 0.61f, size.height * 0.78f, size.width * 0.92f, size.height * (0.62f + (seed % 3) * 0.02f))
+    }
+    drawPath(p1, ProGoldDeep, style = Stroke(width = 6f))
+    val p2 = Path().apply {
+        moveTo(size.width * 0.28f, size.height * 0.60f)
+        cubicTo(size.width * 0.36f, size.height * 0.45f, size.width * 0.51f, size.height * 0.50f, size.width * 0.46f, size.height * 0.68f)
+    }
+    drawPath(p2, ProRoyal2, style = Stroke(width = 4f))
+    repeat(3) { i ->
+        val x = size.width * (0.54f + i * 0.11f)
+        drawLine(ProGold, Offset(x, size.height * 0.66f), Offset(x, size.height * (0.23f - i * 0.025f)), 4f)
+    }
+}
+
+private fun starPath(center: Offset, radius: Float, points: Int, innerRatio: Float): Path {
+    val path = Path()
+    repeat(points * 2) { index ->
+        val r = if (index % 2 == 0) radius else radius * innerRatio
+        val angle = (-PI / 2.0 + PI * index / points).toFloat()
+        val x = center.x + cos(angle) * r
+        val y = center.y + sin(angle) * r
+        if (index == 0) path.moveTo(x, y) else path.lineTo(x, y)
+    }
+    path.close()
+    return path
+}
+
+private fun regularPolygon(center: Offset, radius: Float, sides: Int, rotation: Double): Path {
+    val path = Path()
+    repeat(sides) { i ->
+        val angle = (rotation + 2.0 * PI * i / sides).toFloat()
+        val x = center.x + cos(angle) * radius
+        val y = center.y + sin(angle) * radius
+        if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+    }
+    path.close()
+    return path
 }
